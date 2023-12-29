@@ -5,7 +5,7 @@
 ;; Author: Paul D. Nelson <nelson.paul.david@gmail.com>
 ;; Version: 0.0
 ;; URL: https://github.com/ultronozm/czm-lean4.el
-;; Packages-Requires: ((emacs "29.1") (lean4-mode "0.0") (pos-tip "0.4.6"))
+;; Package-Requires: ((emacs "29.1") (pos-tip))
 ;; Keywords: convenience
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -23,11 +23,14 @@
 
 ;;; Commentary:
 
-;; Embellishments for lean4-mode
+;; Embellishments for lean4-mode.  See README.org.
 
 ;;; Code:
 
 (require 'pos-tip)
+
+;; Could also just use forward-sentence/backward-sentence for the next
+;; two functions
 
 ;;;###autoload
 (defun czm-lean4-cheap-beginning-of-defun ()
