@@ -4,10 +4,10 @@
 * Overview
 This package collects my personal tweaks to [[https://github.com/leanprover/lean4-mode][lean4-mode]].
 
-1. Minimal support for navigating by defun (=C-M-a=, =C-M-e=).
+1. Reasonable values for =beginning-of-defun-function= and =end-of-defun-function=, so that =beginning-of-defun= (=C-M-a=), =end-of-defun= (=C-M-e=) and =narrow-to-defun= (=C-x n d=) work.
 2. A command for displaying the active namespace/section/variable declarations.
-3. Support for [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Outline-Mode.html][Outline mode]].
-4. (Taken from https://github.com/leanprover/lean4-mode/issues/22) Command for temporarily pausing info display.
+3. Reasonable values for =outline-regexp= and =outline-level=, so that [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Outline-Mode.html][Outline mode]] works.
+4. (Taken from https://github.com/leanprover/lean4-mode/issues/22) A command for temporarily pausing the info display.
 
 * Configuration
 This package requires [[https://github.com/leanprover/lean4-mode][lean4-mode]], so install that first.
