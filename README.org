@@ -2,11 +2,11 @@
 #+author: Paul Nelson
 
 * Overview
-This package collects my personal tweaks to [[https://github.com/leanprover/lean4-mode][lean4-mode]].
+This package collects features that I'm using in conjunction with [[https://github.com/leanprover/lean4-mode][lean4-mode]].
 
 1. Reasonable values for =beginning-of-defun-function= and =end-of-defun-function=, so that =beginning-of-defun= (=C-M-a=), =end-of-defun= (=C-M-e=) and =narrow-to-defun= (=C-x n d=) work.
-2. A command for displaying the active namespace/section/variable declarations.
-3. Reasonable values for =outline-regexp= and =outline-level=, so that [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Outline-Mode.html][Outline mode]] works.
+2. Reasonable values for =outline-regexp= and =outline-level=, so that [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Outline-Mode.html][Outline mode]] works.
+3. A command for displaying the active namespace/section/variable declarations.
 4. (Taken from https://github.com/leanprover/lean4-mode/issues/22) A command for temporarily pausing the info display.
 
 * Configuration
