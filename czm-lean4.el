@@ -29,26 +29,32 @@
 
 (require 'pos-tip)
 
+;;;###autoload
 (defun czm-lean4-cheap-beginning-of-defun ()
-  "Go up just before hitting a blank line."
+  "Move to last non-blank line after any blank lines."
   (interactive)
   (unless (bobp)
-   (backward-char)
-   (goto-char (line-beginning-position))
-   (while (and (not (bobp))
-               (save-excursion
-                 (forward-line -1)
-                 (not (looking-at-p "^\\s-*$"))))
-     (forward-line -1))))
+    (backward-char)
+    (goto-char (line-beginning-position))
+    (while (and (not (bobp))
+                (looking-at-p "^\\s-*$"))
+      (forward-line -1))
+    (while (and (not (bobp))
+                (save-excursion
+                  (forward-line -1)
+                  (not (looking-at-p "^\\s-*$"))))
+      (forward-line -1))))
 
+;;;###autoload
 (defun czm-lean4-cheap-end-of-defun ()
-  "Move to first blank line after some non-blank."
+  "Move to first blank line after some non-blank lines."
   (interactive)
   (while (and (not (eobp)) (looking-at-p "^\\s-*$"))
     (forward-line 1))
   (while (and (not (eobp)) (not (looking-at-p "^\\s-*$")))
     (forward-line 1)))
 
+;;;###autoload
 (defun czm-lean4-show-variables (&optional prefix)
   "Display current namespace/section and active variables.
 By default, show the result in a pop-up, via `pos-tip-show'.
@@ -90,9 +96,10 @@ With a PREFIX argument, use a separate buffer."
       (if (<= (prefix-numeric-value prefix)
               1)
           (pos-tip-show output nil nil nil 60)
-        (with-output-to-temp-buffer "*Variable context*"
+        (with-output-to-temp-buffer "*Variable context for lean4*"
           (princ output))))))
 
+;;;###autoload
 (defun czm-lean4-mode-hook ()
   "Hook to be used with lean4-mode."
   (setq-local beginning-of-defun-function #'czm-lean4-cheap-beginning-of-defun)
@@ -120,6 +127,7 @@ With a PREFIX argument, use a separate buffer."
 
 (defvar czm-lean4-pause-info nil "If non-nil, pause info buffer updates.")
 
+;;;###autoload
 (defun czm-lean4-info-buffer-redisplay (old-fun &rest args)
   "Suppress call to OLD-FUN if `czm-lean4-pause-info' is non-nil.
 Otherwise, call with ARGS.
@@ -128,6 +136,7 @@ Credit: felipeochoa, https://github.com/leanprover/lean4-mode/issues/22."
   (unless czm-lean4-pause-info
     (apply old-fun args)))
 
+;;;###autoload
 (defun czm-lean4-toggle-info-pause ()
   "Toggle pausing of automatic info refresh.
 
