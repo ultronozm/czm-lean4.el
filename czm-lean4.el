@@ -80,7 +80,7 @@ With a PREFIX argument, use a separate buffer."
             (cond
              ((string-match "^end" matched)
               (progn
-                (while (not (string-match "^\\(section\\|namespace\\)" (car my-stack)))
+                (while (not (string-match "^\\s-*\\(section\\|namespace\\)" (car my-stack)))
                   (pop my-stack))
                 (pop my-stack)
                 (setq indent-level (max 0 (1- indent-level)))))
