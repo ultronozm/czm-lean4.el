@@ -5,7 +5,7 @@
 ;; Author: Paul D. Nelson <nelson.paul.david@gmail.com>
 ;; Version: 0.0
 ;; URL: https://github.com/ultronozm/czm-lean4.el
-;; Package-Requires: ((emacs "29.1") (pos-tip))
+;; Package-Requires: ((emacs "29.1") (pos-tip) (consult "1.1"))
 ;; Keywords: convenience
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,8 @@
 ;;; Code:
 
 (require 'pos-tip)
+(require 'project)
+(require 'consult)
 
 ;; Could also just use forward-sentence/backward-sentence for the next
 ;; two functions
@@ -126,7 +128,7 @@ With a PREFIX argument, use a separate buffer."
           (forward-line -1))))
     count))
 
-; the following was taken from https://github.com/leanprover/lean4-mode/issues/22, due to felipeochoa
+; the following couple defuns were taken from https://github.com/leanprover/lean4-mode/issues/22, due to felipeochoa
 
 (defvar czm-lean4-pause-info nil "If non-nil, pause info buffer updates.")
 
@@ -147,6 +149,45 @@ Credit: felipeochoa, https://github.com/leanprover/lean4-mode/issues/22."
   (interactive)
   (setq czm-lean4-pause-info (not czm-lean4-pause-info)))
 
+(defun czm-lean4-mathlib-path ()
+  "Get the path to the Mathlib folder."
+  (let* ((project-root (expand-file-name (project-root (project-current))))
+         (root-folder-name (file-name-nondirectory (directory-file-name project-root))))
+    (cond ((string= root-folder-name "mathlib")
+           ;; Get parent of 'project-root' and append "Mathlib"
+           (expand-file-name  "Mathlib" project-root))
+          ((file-exists-p (concat project-root ".lake/packages/mathlib/Mathlib"))
+           ;; Append ".lake/packages/mathlib/Mathlib" to project-root
+           (expand-file-name  ".lake/packages/mathlib/Mathlib" project-root) )
+          (t
+           nil))))
+
+(defcustom czm-lean4-search-function #'consult-ripgrep
+  "Function to use for searching in lean4-mode."
+  :type 'function
+  :group 'czm-lean4)
+
+;;;###autoload
+(defun czm-lean4-search-mathlib (&optional initial)
+  "Search the Mathlib folder with given INITIAL input."
+  (interactive)
+  (let ((mathlib-path (czm-lean4-mathlib-path)))
+    (if mathlib-path
+        (funcall czm-lean4-search-function mathlib-path initial)
+      (message "Mathlib path not found."))))
+
+(defcustom czm-lean4-headings
+  '("def" "theorem" "inductive" "structure" "class" "instance" "axiom" "opaque")
+  "List of headings to search for in Mathlib."
+  :type '(repeat string)
+  :group 'czm-lean4)
+
+;;;###autoload
+(defun czm-lean4-search-mathlib-headings ()
+  "Search the Mathlib folder for theorems."
+  (interactive)
+  (let ((re (concat "^" (regexp-opt czm-lean4-headings 'words))))
+    (czm-lean4-search-mathlib (concat re " -- -g !Deprecated # "))))
 
 (provide 'czm-lean4)
 ;;; czm-lean4.el ends here

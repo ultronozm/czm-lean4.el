@@ -8,6 +8,7 @@ This package collects features that I'm using in conjunction with [[https://gith
 2. Reasonable values for =outline-regexp= and =outline-level=, so that [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Outline-Mode.html][Outline mode]] works.
 3. A command for displaying the active namespace/section/variable declarations.
 4. (Taken from https://github.com/leanprover/lean4-mode/issues/22) A command for temporarily pausing the info display.
+5. Commands for searching the appropriate Mathlib folder via.
 
 * Configuration
 This package requires [[https://github.com/leanprover/lean4-mode][lean4-mode]], so install that first.
@@ -19,7 +20,9 @@ Download this repository, install using =M-x package-install-file= (or package-v
   :hook (lean4-mode . czm-lean4-mode-hook)
   :bind (:map lean4-mode-map
               ("C-c v" . czm-lean4-show-variables)
-              ("C-c C-p C-p" . czm-lean4-toggle-info-pause))
+              ("C-c C-p C-p" . czm-lean4-toggle-info-pause)
+              ("C-c m m" . czm-lean4-search-mathlib)
+              ("C-c m h" . czm-lean4-search-mathlib-headings))
   :config
   (advice-add 'lean4-info-buffer-redisplay :around #'czm-lean4-info-buffer-redisplay))
 #+end_src
