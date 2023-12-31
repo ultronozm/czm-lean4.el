@@ -94,7 +94,18 @@ With a PREFIX argument, use a separate buffer."
                               matched)
                       my-stack)
                 (setq indent-level (1+ indent-level))))
-             (t
+             (t ; variable
+              (setq matched (buffer-substring-no-properties
+                             (line-beginning-position)
+                             (save-excursion (forward-paragraph)
+                                             (backward-char)
+                                             (point))))
+              (setq matched
+                    (mapconcat (lambda (line)
+                                 (concat (make-string indent-level ? )
+                                         line))
+                               (split-string matched "\n")
+                               "\n"))
               (push (concat (make-string indent-level ? )
                             matched)
                     my-stack)))))))
