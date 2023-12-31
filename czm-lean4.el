@@ -240,13 +240,27 @@ section block."
   :type 'number
   :group 'czm-lean4)
 
+(defcustom czm-lean4-info-window-width-fraction 0.4
+  "Fraction of window width to use for info buffer."
+  :type 'number
+  :group 'czm-lean4)
+
 ;;;###autoload
 (defun czm-lean4-toggle-info-split-below ()
-   "Show infos at the current point, split below."
-   (interactive)
-   (czm-lean4--toggle-info-custom-display
-    `((display-buffer-below-selected display-buffer-reuse-window)
-      (window-height . ,czm-lean4-info-window-height-fraction))))
+  "Show infos at the current point, split below."
+  (interactive)
+  (czm-lean4--toggle-info-custom-display
+   `((display-buffer-below-selected display-buffer-reuse-window)
+     (window-height . ,czm-lean4-info-window-height-fraction))))
+
+;;;###autoload
+(defun czm-lean4-toggle-info-split-right ()
+  "Show infos at the current point, split right."
+  (interactive)
+  (czm-lean4--toggle-info-custom-display
+   `((display-buffer-in-side-window)
+     (side . right)
+     (window-width . ,czm-lean4-info-window-width-fraction))))
 
 (provide 'czm-lean4)
 ;;; czm-lean4.el ends here
