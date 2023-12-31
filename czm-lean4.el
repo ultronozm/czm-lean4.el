@@ -179,8 +179,14 @@ Credit: felipeochoa, https://github.com/leanprover/lean4-mode/issues/22."
       (message "Mathlib path not found."))))
 
 (defcustom czm-lean4-headings
-  '("def" "theorem" "inductive" "structure" "class" "instance" "axiom" "opaque")
+  '("def" "irreducible_def" "theorem" "inductive" "structure" "class" "instance" "axiom" "opaque")
   "List of headings to search for in Mathlib."
+  :type '(repeat string)
+  :group 'czm-lean4)
+
+(defcustom czm-lean4-heading-prefixes
+  '("private" "protected" "noncomputable")
+  "List of prefixes to search for in Mathlib."
   :type '(repeat string)
   :group 'czm-lean4)
 
@@ -188,7 +194,21 @@ Credit: felipeochoa, https://github.com/leanprover/lean4-mode/issues/22."
 (defun czm-lean4-search-mathlib-headings ()
   "Search the Mathlib folder for theorems."
   (interactive)
-  (let ((re (concat "^" (regexp-opt czm-lean4-headings 'words))))
+  (let ((re (concat "^"
+                    (regexp-opt (append czm-lean4-headings czm-lean4-heading-prefixes))
+                    ;; the following would be more natural, but doesn't
+                    ;; seem to work correctly with rg
+                    ;;
+                    ;; (regexp-opt
+                    ;;  (mapcan (lambda (x)
+                    ;;            (mapcar (lambda (y)
+                    ;;                      (concat x y))
+                    ;;                    czm-lean4-headings))
+                    ;;          `(""
+                    ;;            ,@(mapcar (lambda (x)
+                    ;;                        (concat x " "))
+                    ;;                      czm-lean4-heading-prefixes))))
+                    )))
     (czm-lean4-search-mathlib (concat re " -- -g !Deprecated # "))))
 
 ;;;###autoload
