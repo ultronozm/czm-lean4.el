@@ -11,6 +11,8 @@ This package collects features that I'm using in conjunction with [[https://gith
 5. Commands for searching the appropriate Mathlib folder (via consult-ripgrep), either for all text or just theorem-like headings.
 6. A command for inserting sections/namespaces, or wrapping a region with those.
 7. A command for displaying the info buffer below the current window (rather than the default behavior, to the side - I often prefer one over the other).
+8. Line wrapping for the goal window, with visual indicators where it wraps.
+   
 
 * Configuration
 This package requires [[https://github.com/leanprover/lean4-mode][lean4-mode]], so install that first.
@@ -20,6 +22,7 @@ Download this repository, install using =M-x package-install-file= (or package-v
 (use-package czm-lean4
   :after lean4-mode
   :hook (lean4-mode . czm-lean4-mode-hook)
+  :hook (magit-section-mode . czm-lean4-magit-section-mode-hook)
   :bind (:map lean4-mode-map
               ("C-c v" . czm-lean4-show-variables)
               ("C-c C-p C-p" . czm-lean4-toggle-info-pause)

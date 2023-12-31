@@ -114,6 +114,13 @@ With a PREFIX argument, use a separate buffer."
   (setq-local outline-regexp "\\(namespace\\|section\\|noncomputable section\\)\\>")
   (setq-local outline-level 'czm-lean4-outline-level))
 
+;;;###autoload
+(defun czm-lean4-magit-section-mode-hook ()
+  "Hook to be used with *Lean Goal* window."
+  (when (equal (buffer-name) "*Lean Goal*")
+    (setq truncate-lines nil)
+    (visual-line-mode)))
+
 (defun czm-lean4-outline-level ()
   "Find outline level of current line in a lean4 document."
   (let ((count 0))
