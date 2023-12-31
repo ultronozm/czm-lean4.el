@@ -5,7 +5,7 @@
 ;; Author: Paul D. Nelson <nelson.paul.david@gmail.com>
 ;; Version: 0.0
 ;; URL: https://github.com/ultronozm/czm-lean4.el
-;; Package-Requires: ((emacs "29.1") (pos-tip) (consult "1.1"))
+;; Package-Requires: ((emacs "29.1") (pos-tip) (consult "1.1") (lsp-mode "8.0.1") (lean4-mode))
 ;; Keywords: convenience
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -30,6 +30,8 @@
 (require 'pos-tip)
 (require 'project)
 (require 'consult)
+(require 'lsp-mode)
+(require 'lean4-mode)
 
 ;; Could also just use forward-sentence/backward-sentence for the next
 ;; two functions
@@ -188,6 +190,63 @@ Credit: felipeochoa, https://github.com/leanprover/lean4-mode/issues/22."
   (interactive)
   (let ((re (concat "^" (regexp-opt czm-lean4-headings 'words))))
     (czm-lean4-search-mathlib (concat re " -- -g !Deprecated # "))))
+
+;;;###autoload
+(defun czm-lean4-insert-section-or-namespace (&optional arg)
+  "Insert a new section or namespace block.
+With a prefix ARG, insert a namespace block.  Otherwise, insert a
+section block."
+  (interactive "P")
+  (let* ((is-namespace (consp arg))
+         (text (read-from-minibuffer "Enter name: "))
+         (region-active (region-active-p))
+         (header
+          (concat
+           (if is-namespace "namespace" "section")
+           (unless (string-empty-p text)
+             (concat " " text))))
+         (footer
+          (concat
+           "end"
+           (unless (string-empty-p text)
+             (concat " " text))))
+         start end)
+    (when region-active
+      (setq start (region-beginning)
+            end (region-end)))
+    (if region-active
+        (progn
+          (goto-char end)
+          (insert footer "\n")
+          (goto-char start)
+          (beginning-of-line)
+          (insert header "\n")
+          (forward-line))
+      (insert header "\n")
+      (save-excursion
+        (insert "\n" footer "\n"))))
+  ;; this last bit updates the font coloring
+  (lsp-on-change 0 (buffer-size)
+                 (buffer-size)))
+
+(defun czm-lean4--toggle-info-custom-display (action)
+  "Toggle display of info buffer with ACTION."
+  (let ((display-buffer-base-action action))
+    (lean4-toggle-info-buffer lean4-info-buffer-name)
+    (lean4-info-buffer-refresh)))
+
+(defcustom czm-lean4-info-window-height-fraction 0.4
+  "Fraction of window height to use for info buffer."
+  :type 'number
+  :group 'czm-lean4)
+
+;;;###autoload
+(defun czm-lean4-toggle-info-split-below ()
+   "Show infos at the current point, split below."
+   (interactive)
+   (czm-lean4--toggle-info-custom-display
+    '((display-buffer-below-selected display-buffer-reuse-window)
+      (window-height . czm-lean4-info-window-height-fraction))))
 
 (provide 'czm-lean4)
 ;;; czm-lean4.el ends here

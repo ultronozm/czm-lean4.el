@@ -8,7 +8,9 @@ This package collects features that I'm using in conjunction with [[https://gith
 2. Reasonable values for =outline-regexp= and =outline-level=, so that [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Outline-Mode.html][Outline mode]] works.
 3. A command for displaying the active namespace/section/variable declarations.
 4. (Taken from https://github.com/leanprover/lean4-mode/issues/22) A command for temporarily pausing the info display.
-5. Commands for searching the appropriate Mathlib folder via.
+5. Commands for searching the appropriate Mathlib folder (via consult-ripgrep), either for all text or just theorem-like headings.
+6. A command for inserting sections/namespaces, or wrapping a region with those.
+7. A command for displaying the info buffer below the current window (rather than the default behavior, to the side - I often prefer one over the other).
 
 * Configuration
 This package requires [[https://github.com/leanprover/lean4-mode][lean4-mode]], so install that first.
@@ -22,7 +24,10 @@ Download this repository, install using =M-x package-install-file= (or package-v
               ("C-c v" . czm-lean4-show-variables)
               ("C-c C-p C-p" . czm-lean4-toggle-info-pause)
               ("C-c m m" . czm-lean4-search-mathlib)
-              ("C-c m h" . czm-lean4-search-mathlib-headings))
+              ("C-c m h" . czm-lean4-search-mathlib-headings)
+              ("C-c C-o" . czm-lean4-toggle-info-split-below))
   :config
   (advice-add 'lean4-info-buffer-redisplay :around #'czm-lean4-info-buffer-redisplay))
 #+end_src
+
+Customize the binds as you like, and use the built-in documentation (=C-h f czm-lean4-whatever=) to see exactly what the commands do.
