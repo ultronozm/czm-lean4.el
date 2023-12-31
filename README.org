@@ -34,3 +34,63 @@ Download this repository, install using =M-x package-install-file= (or package-v
 #+end_src
 
 Customize the binds as you like, and use the built-in documentation (=C-h f czm-lean4-whatever=) to see exactly what the commands do.
+
+* More configuration
+Here's the more complete configuration I'm using in conjunction with lean4-mode, which contains other tweaks that seems best to keep out of this package.
+
+#+begin_src elisp
+(use-package lean4-mode
+  :elpaca (:host github :repo "leanprover/lean4-mode"
+                 :files ("*.el" "data"))
+  :hook (lean4-mode . spout-mode)
+  :commands (lean4-mode)
+  :custom
+  (lean4-keybinding-lean4-toggle-info (kbd "C-c C-y"))
+  :config
+  ;; disable annoying file watcher spam
+  (setq lsp-enable-file-watchers nil)
+  :defer t)
+
+(use-package czm-lean4
+  :elpaca (:host github :repo "ultronozm/czm-lean4.el"
+                 :depth nil)
+  :after lean4-mode
+  :hook (lean4-mode . czm-lean4-mode-hook)
+  :hook (magit-section-mode . czm-lean4-magit-section-mode-hook)
+  :bind (:map lean4-mode-map
+              ("C-c v" . czm-lean4-show-variables)
+              ("C-c C-p C-p" . czm-lean4-toggle-info-pause)
+              ("C-c C-m C-m" . czm-lean4-search-mathlib)
+              ("C-c C-m C-h" . czm-lean4-search-mathlib-headings)
+              ("C-c C-," . czm-lean4-insert-section-or-namespace)
+              ("C-c C-i" . czm-lean4-toggle-info-split-below)
+              ("C-c C-o" . czm-lean4-toggle-info-split-right))
+  :custom
+  (czm-lean4-info-window-height-fraction 0.4)
+  (czm-lean4-info-window-width-fraction 0.4)
+  :config
+  (advice-add 'lean4-info-buffer-redisplay :around #'czm-lean4-info-buffer-redisplay))
+
+;; by default, flycheck for lean4-mode causes the minibuffer to flicker.
+;; the following code disables that.
+(defun czm-flycheck-display-error-messages (errors)
+  "Display ERRORS using `message'.
+If major-mode is lean4-mode, then don't do anything."
+  (unless (eq major-mode 'lean4-mode)
+    (let ((message-truncate-lines t))
+      (flycheck-display-error-messages errors))))
+(setq flycheck-display-errors-function #'czm-flycheck-display-error-messages)
+
+;; lsp-mode calculates line numbers without first calling widen.
+;; let's fix that, so that line numbers work in narrowed buffers, too.
+(defun my-lsp--cur-line (&optional point)
+  (save-restriction
+    (widen)
+    (1- (line-number-at-pos point))))
+(advice-add 'lsp--cur-line :override #'my-lsp--cur-line)
+
+(use-package eldoc-box
+  :commands (eldoc-box-help-at-point))
+
+(global-set-key (kbd "C-c e") #'eldoc-box-help-at-point)
+#+end_src
