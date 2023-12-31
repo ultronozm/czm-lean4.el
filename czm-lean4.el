@@ -94,7 +94,7 @@ With a PREFIX argument, use a separate buffer."
                               matched)
                       my-stack)
                 (setq indent-level (1+ indent-level))))
-             (t ; variable
+             (t                         ; variable
               (setq matched (buffer-substring-no-properties
                              (line-beginning-position)
                              (save-excursion (forward-paragraph)
@@ -106,8 +106,7 @@ With a PREFIX argument, use a separate buffer."
                                          line))
                                (split-string matched "\n")
                                "\n"))
-              (push (concat (make-string indent-level ? )
-                            matched)
+              (push matched
                     my-stack)))))))
     (let ((output (mapconcat 'identity (nreverse my-stack)
                              "\n")))
