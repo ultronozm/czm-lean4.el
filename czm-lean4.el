@@ -245,8 +245,8 @@ section block."
    "Show infos at the current point, split below."
    (interactive)
    (czm-lean4--toggle-info-custom-display
-    '((display-buffer-below-selected display-buffer-reuse-window)
-      (window-height . czm-lean4-info-window-height-fraction))))
+    `((display-buffer-below-selected display-buffer-reuse-window)
+      (window-height . ,czm-lean4-info-window-height-fraction))))
 
 (provide 'czm-lean4)
 ;;; czm-lean4.el ends here
