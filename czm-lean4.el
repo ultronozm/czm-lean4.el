@@ -129,7 +129,8 @@ With a PREFIX argument, use a separate buffer."
   "Hook to be used with *Lean Goal* window."
   (when (equal (buffer-name) "*Lean Goal*")
     (setq truncate-lines nil)
-    (visual-line-mode)))
+    ;; (visual-line-mode)
+    ))
 
 (defun czm-lean4-outline-level ()
   "Find outline level of current line in a lean4 document."
@@ -298,6 +299,52 @@ section block."
    `((display-buffer-in-side-window)
      (side . right)
      (window-width . ,czm-lean4-info-window-width-fraction))))
+
+(defconst czm-lean4-delimiter-list '("(" "{" "[")
+  "List of delimiter characters for cycling.")
+
+(defun czm-lean4--cycle-delimiter-helper (ch forward)
+  "Helper function to cycle delimiters.
+CH is one of the delimiter characters.
+FORWARD is non-nil if we are cycling forward, nil otherwise.
+This function assumes that point is on a delimiter character."
+  (let* ((steps (if forward 1 -1))
+         (delimiters-length (length czm-lean4-delimiter-list))
+         (index (mod (+ (cl-position ch czm-lean4-delimiter-list :test #'string=) steps)
+                     delimiters-length))
+         (new-delimiter (elt czm-lean4-delimiter-list index))
+         (end-of-sexp (save-excursion
+                        (forward-sexp)
+                        (backward-char)
+                        (point))))
+    (save-excursion
+      (delete-char 1)
+      (insert new-delimiter)
+      (goto-char end-of-sexp)
+      (delete-char 1)
+      (insert
+       (pcase new-delimiter
+         ("(" ")")
+         ("{" "}")
+         ("[" "]"))))))
+
+;;;###autoload
+(defun czm-lean4-cycle-delimiter-forward ()
+  "Cycle forward the delimiter at point: ( -> { -> [ -> ( -> ..."
+  (interactive)
+  (let ((ch (string (char-after (point)))))
+    (if (member ch czm-lean4-delimiter-list)
+        (czm-lean4--cycle-delimiter-helper ch t)
+      (message "Point is not on a delimiter character."))))
+
+;;;###autoload
+(defun czm-lean4-cycle-delimiter-backward ()
+  "Cycle backward the delimiter at point: ( -> [ -> { -> ( -> ..."
+  (interactive)
+  (let ((ch (string (char-after (point)))))
+    (if (member ch czm-lean4-delimiter-list)
+        (czm-lean4--cycle-delimiter-helper ch nil)
+      (message "Point is not on a delimiter character."))))
 
 (provide 'czm-lean4)
 ;;; czm-lean4.el ends here

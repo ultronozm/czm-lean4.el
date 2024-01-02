@@ -2,7 +2,7 @@
 #+author: Paul Nelson
 
 * Overview
-This package collects features that I'm using in conjunction with [[https://github.com/leanprover/lean4-mode][lean4-mode]].
+This package collects features that I'm using in conjunction with [[https://github.com/bustercopley/lean4-mode][(bustercopley's fork of) lean4-mode]].
 
 1. Reasonable values for =beginning-of-defun-function= and =end-of-defun-function=, so that =beginning-of-defun= (=C-M-a=), =end-of-defun= (=C-M-e=) and =narrow-to-defun= (=C-x n d=) work.
 2. Reasonable values for =outline-regexp= and =outline-level=, so that [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Outline-Mode.html][Outline mode]] works.
@@ -12,6 +12,7 @@ This package collects features that I'm using in conjunction with [[https://gith
 6. A command for inserting sections/namespaces, or wrapping a region with those.
 7. A command for displaying the info buffer below the current window (rather than the default behavior, to the side - I often prefer one over the other).
 8. Line wrapping for the goal window, with visual indicators where it wraps.
+9. Commands for cycling delimiters, ( -> { -> [ -> ( -> ... and in reverse.
    
 
 * Configuration
@@ -36,19 +37,22 @@ Download this repository, install using =M-x package-install-file= (or package-v
 Customize the binds as you like, and use the built-in documentation (=C-h f czm-lean4-whatever=) to see exactly what the commands do.
 
 * More configuration
-Here's the more complete configuration I'm using in conjunction with lean4-mode, which contains other tweaks that seemed best left out of this package.
+Here's my complete lean4-related configuration, which contains other tweaks that seemed best left out of this package.
 
 #+begin_src elisp
 (use-package lean4-mode
-  :elpaca (:host github :repo "leanprover/lean4-mode"
+  :elpaca (:host github :repo "bustercopley/lean4-mode"
                  :files ("*.el" "data"))
   :hook (lean4-mode . spout-mode)
+  :hook (lean4-mode . company-mode)
   :commands (lean4-mode)
   :custom
   (lean4-keybinding-lean4-toggle-info (kbd "C-c C-y"))
+  :bind (:map lean4-mode-map
+              ("RET" . newline)
+              ("C-j" . default-indent-new-line)
+              ("C-M-i" . company-indent-or-complete-common))
   :config
-  ;; disable annoying file watcher spam
-  (setq lsp-enable-file-watchers nil)
   :defer t)
 
 (use-package czm-lean4
@@ -64,7 +68,9 @@ Here's the more complete configuration I'm using in conjunction with lean4-mode,
               ("C-c C-m C-h" . czm-lean4-search-mathlib-headings)
               ("C-c C-," . czm-lean4-insert-section-or-namespace)
               ("C-c C-i" . czm-lean4-toggle-info-split-below)
-              ("C-c C-o" . czm-lean4-toggle-info-split-right))
+              ("C-c C-o" . czm-lean4-toggle-info-split-right)
+              ("M-]" . czm-lean4-cycle-delimiter-forward)
+              ("M-[" . czm-lean4-cycle-delimiter-backward))
   :custom
   (czm-lean4-info-window-height-fraction 0.4)
   (czm-lean4-info-window-width-fraction 0.4)
@@ -93,4 +99,10 @@ If major-mode is lean4-mode, then don't do anything."
   :commands (eldoc-box-help-at-point))
 
 (global-set-key (kbd "C-c e") #'eldoc-box-help-at-point)
+
+(use-package eldoc-icebox
+  :elpaca (:host github :repo "ultronozm/eldoc-icebox.el"
+                 :depth nil)
+  :bind (("C-c C-h" . eldoc-icebox-store)
+         ("C-c C-n" . eldoc-icebox-toggle-display)))
 #+end_src
