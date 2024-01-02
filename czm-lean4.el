@@ -97,9 +97,9 @@ With a PREFIX argument, use a separate buffer."
              (t                         ; variable
               (setq matched (buffer-substring-no-properties
                              (line-beginning-position)
-                             (save-excursion (forward-paragraph)
-                                             (backward-char)
-                                             (point))))
+                             (progn (forward-paragraph)
+                                    (backward-char)
+                                    (point))))
               (setq matched
                     (mapconcat (lambda (line)
                                  (concat (make-string indent-level ? )
