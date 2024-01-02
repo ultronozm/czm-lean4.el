@@ -229,6 +229,27 @@ Credit: felipeochoa, https://github.com/leanprover/lean4-mode/issues/22."
                     )))
     (czm-lean4-search-mathlib (concat re " -- -g !Deprecated # "))))
 
+
+(defun czm-lean4--insertion-helper (header footer region)
+  "Helper function for inserting section namespace/comment blocks.
+If REGION is nil, then insert HEADER and FOOTER, separated by
+newlines, with point in between.  Otherwise, insert HEADER before
+the region and FOOTER after the region."
+  (if region
+      (progn
+        (goto-char (car region))
+        (insert footer "\n")
+        (goto-char (cdr region))
+        (beginning-of-line)
+        (insert header "\n")
+        (forward-line))
+    (insert header "\n")
+    (save-excursion
+      (insert "\n" footer "\n")))
+  ;; this last bit updates the font coloring
+  (lsp-on-change 0 (buffer-size)
+                 (buffer-size)))
+
 ;;;###autoload
 (defun czm-lean4-insert-section-or-namespace (&optional arg)
   "Insert a new section or namespace block.
@@ -247,25 +268,20 @@ section block."
           (concat
            "end"
            (unless (string-empty-p text)
-             (concat " " text))))
-         start end)
-    (when region-active
-      (setq start (region-beginning)
-            end (region-end)))
-    (if region-active
-        (progn
-          (goto-char end)
-          (insert footer "\n")
-          (goto-char start)
-          (beginning-of-line)
-          (insert header "\n")
-          (forward-line))
-      (insert header "\n")
-      (save-excursion
-        (insert "\n" footer "\n"))))
-  ;; this last bit updates the font coloring
-  (lsp-on-change 0 (buffer-size)
-                 (buffer-size)))
+             (concat " " text)))))
+    (czm-lean4--insertion-helper header footer (when region-active (cons (region-beginning)
+                                                                         (region-end))))))
+
+
+;;;###autoload
+(defun czm-lean4-insert-comment-block ()
+  "Insert a comment block."
+  (interactive)
+  (let* ((region-active (region-active-p))
+         (header "/-\n")
+         (footer "\n-/"))
+    (czm-lean4--insertion-helper header footer (when region-active (cons (region-beginning)
+                                                                         (region-end))))))
 
 (defun czm-lean4--toggle-info-custom-display (action)
   "Toggle display of info buffer with ACTION."

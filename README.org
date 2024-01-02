@@ -9,7 +9,7 @@ This package collects features that I'm using in conjunction with [[https://gith
 3. A command for displaying the active namespace/section/variable declarations.
 4. (Taken from https://github.com/leanprover/lean4-mode/issues/22) A command for temporarily pausing the info display.
 5. Commands for searching the appropriate Mathlib folder (via consult-ripgrep), either for all text or just theorem-like headings.
-6. A command for inserting sections/namespaces, or wrapping a region with those.
+6. A command for inserting sections/namespaces, or wrapping a region with those, and similarly for comment blocks.
 7. A command for displaying the info buffer below the current window (rather than the default behavior, to the side - I often prefer one over the other).
 8. Line wrapping for the goal window, with visual indicators where it wraps.
 9. Commands for cycling delimiters, ( -> { -> [ -> ( -> ... and in reverse.
@@ -67,6 +67,7 @@ Here's my complete lean4-related configuration, which contains other tweaks that
               ("C-c C-m C-m" . czm-lean4-search-mathlib)
               ("C-c C-m C-h" . czm-lean4-search-mathlib-headings)
               ("C-c C-," . czm-lean4-insert-section-or-namespace)
+              ("C-c C-." . czm-lean4-insert-comment-block)
               ("C-c C-i" . czm-lean4-toggle-info-split-below)
               ("C-c C-o" . czm-lean4-toggle-info-split-right)
               ("M-]" . czm-lean4-cycle-delimiter-forward)
