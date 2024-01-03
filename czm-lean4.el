@@ -237,9 +237,9 @@ newlines, with point in between.  Otherwise, insert HEADER before
 the region and FOOTER after the region."
   (if region
       (progn
-        (goto-char (car region))
-        (insert footer "\n")
         (goto-char (cdr region))
+        (insert footer "\n")
+        (goto-char (car region))
         (beginning-of-line)
         (insert header "\n")
         (forward-line))
