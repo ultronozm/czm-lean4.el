@@ -80,34 +80,35 @@ With a PREFIX argument, use a separate buffer."
              (re-search-forward "^\\(noncomputable section\\|section\\|namespace\\|end\\|variable\\).*" nil t)
              (< (point)
                 pos))
-          (let ((matched (match-string 0)))
-            (cond
-             ((string-match "^end" matched)
-              (progn
-                (while (not (string-match "^\\s-*\\(noncomputable section\\|section\\|namespace\\)" (car my-stack)))
-                  (pop my-stack))
-                (pop my-stack)
-                (setq indent-level (max 0 (1- indent-level)))))
-             ((string-match "^\\(noncomputable section\\|section\\|namespace\\)" matched)
-              (progn
-                (push (concat (make-string indent-level ? )
-                              matched)
-                      my-stack)
-                (setq indent-level (1+ indent-level))))
-             (t                         ; variable
-              (setq matched (buffer-substring-no-properties
-                             (line-beginning-position)
-                             (progn (forward-paragraph)
-                                    (backward-char)
-                                    (point))))
-              (setq matched
-                    (mapconcat (lambda (line)
-                                 (concat (make-string indent-level ? )
-                                         line))
-                               (split-string matched "\n")
-                               "\n"))
-              (push matched
-                    my-stack)))))))
+          (unless (lean4-in-comment-p)
+            (let ((matched (match-string 0)))
+              (cond
+               ((string-match "^end" matched)
+                (progn
+                  (while (not (string-match "^\\s-*\\(noncomputable section\\|section\\|namespace\\)" (car my-stack)))
+                    (pop my-stack))
+                  (pop my-stack)
+                  (setq indent-level (max 0 (1- indent-level)))))
+               ((string-match "^\\(noncomputable section\\|section\\|namespace\\)" matched)
+                (progn
+                  (push (concat (make-string indent-level ? )
+                                matched)
+                        my-stack)
+                  (setq indent-level (1+ indent-level))))
+               (t                       ; variable
+                (setq matched (buffer-substring-no-properties
+                               (line-beginning-position)
+                               (progn (forward-paragraph)
+                                      (backward-char)
+                                      (point))))
+                (setq matched
+                      (mapconcat (lambda (line)
+                                   (concat (make-string indent-level ? )
+                                           line))
+                                 (split-string matched "\n")
+                                 "\n"))
+                (push matched
+                      my-stack))))))))
     (let ((output (mapconcat 'identity (nreverse my-stack)
                              "\n")))
       (if (<= (prefix-numeric-value prefix)
