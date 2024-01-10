@@ -2,7 +2,7 @@
 #+author: Paul Nelson
 
 * Overview
-This package collects features that I'm using in conjunction with [[https://github.com/bustercopley/lean4-mode][(bustercopley's fork of) lean4-mode]].
+This package collects features that I'm using in conjunction with [[https://github.com/ultronozm/lean4-mode][(my fork of bustercopley's fork of) lean4-mode]].  (The new feature of my fork is to provide hover docs for the info view.)
 
 1. Reasonable values for =beginning-of-defun-function= and =end-of-defun-function=, so that =beginning-of-defun= (=C-M-a=), =end-of-defun= (=C-M-e=) and =narrow-to-defun= (=C-x n d=) work.
 2. Reasonable values for =outline-regexp= and =outline-level=, so that [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Outline-Mode.html][Outline mode]] works.
@@ -41,7 +41,7 @@ Here's my complete lean4-related configuration, which contains other tweaks that
 
 #+begin_src elisp
 (use-package lean4-mode
-  :elpaca (:host github :repo "bustercopley/lean4-mode"
+  :elpaca (:host github :repo "ultronozm/lean4-mode"
                  :files ("*.el" "data"))
   :hook (lean4-mode . spout-mode)
   :hook (lean4-mode . company-mode)
@@ -71,6 +71,10 @@ Here's my complete lean4-related configuration, which contains other tweaks that
               ("C-c C-i" . czm-lean4-toggle-info-split-below)
               ("C-c C-o" . czm-lean4-toggle-info-split-right)
               ("M-]" . czm-lean4-cycle-delimiter-forward)
+              ("§" . copilot-accept-completion)
+              ("M-§" . copilot-accept-completion-by-word)
+              ("C-§" . copilot-accept-completion-by-line)
+              ("C-M-§" . copilot-accept-completion-by-paragraph)
               ("M-[" . czm-lean4-cycle-delimiter-backward))
   :custom
   (czm-lean4-info-window-height-fraction 0.4)
@@ -78,32 +82,39 @@ Here's my complete lean4-related configuration, which contains other tweaks that
   :config
   (advice-add 'lean4-info-buffer-redisplay :around #'czm-lean4-info-buffer-redisplay))
 
-;; by default, flycheck for lean4-mode causes the minibuffer to flicker.
-;; the following code disables that.
-(defun czm-flycheck-display-error-messages (errors)
-  "Display ERRORS using `message'.
-If major-mode is lean4-mode, then don't do anything."
-  (unless (eq major-mode 'lean4-mode)
-    (let ((message-truncate-lines t))
-      (flycheck-display-error-messages errors))))
-(setq flycheck-display-errors-function #'czm-flycheck-display-error-messages)
-
-;; lsp-mode calculates line numbers without first calling widen.
-;; let's fix that, so that line numbers work in narrowed buffers, too.
-(defun my-lsp--cur-line (&optional point)
-  (save-restriction
-    (widen)
-    (1- (line-number-at-pos point))))
-(advice-add 'lsp--cur-line :override #'my-lsp--cur-line)
-
 (use-package eldoc-box
-  :commands (eldoc-box-help-at-point))
+  :commands (eldoc-box-help-at-point)
+  :bind
+  (:map global-map ("C-c e" . eldoc-box-help-at-point)))
 
-(global-set-key (kbd "C-c e") #'eldoc-box-help-at-point)
+(defun czm-colorize-lean4-signature ()
+  "Highlights the name of each required variable to a Lean4 theorem."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (while (and (< (point) (point-max))
+                (not (eq (char-after (1+ (point))) ?\:)))
+      (forward-list)
+      (when (eq (char-before) ?\) )
+        (save-excursion
+          (backward-list)
+          (let ((inhibit-read-only t)
+                (start (point))
+                (end (save-excursion (forward-list) (point)))
+                (end-first-symbol (save-excursion (forward-word) (point))))
+            (put-text-property (1+ start) end-first-symbol 'face '(shr-mark))))))))
+
+(defun czm-add-lean4-eldoc ()
+  (add-hook 'eldoc-documentation-functions #'lean4-info-eldoc-function
+            nil t))
 
 (use-package eldoc-icebox
   :elpaca (:host github :repo "ultronozm/eldoc-icebox.el"
                  :depth nil)
   :bind (("C-c C-h" . eldoc-icebox-store)
-         ("C-c C-n" . eldoc-icebox-toggle-display)))
+         ("C-c C-n" . eldoc-icebox-toggle-display))
+  :hook
+  (eldoc-icebox-post-display . shrink-window-if-larger-than-buffer)
+  (eldoc-icebox-post-display . czm-colorize-lean4-signature)
+  (eldoc-icebox-post-display . czm-add-lean4-eldoc))
 #+end_src
