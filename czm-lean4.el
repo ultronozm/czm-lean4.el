@@ -378,5 +378,55 @@ This function assumes that point is on a delimiter character."
         (czm-lean4--cycle-delimiter-helper ch nil)
       (message "Point is not on a delimiter character."))))
 
+(defun czm-lean4-format-function ()
+  "Format function at point according to the library guidelines.
+This function assumes that the function or theorem at point has
+its proof indented correctly, in particular, by two spaces, and
+attempts to format the hypotheses in the manner described at URL
+`https://leanprover-community.github.io/contribute/style.html'."
+  (interactive)
+  (let* ((beg (point))
+         (end (save-excursion (end-of-defun)
+                              (point)))
+         (colon-equals (save-excursion
+                         (search-forward ":=" end t)
+                         (while
+                             (or
+                              (> (car (syntax-ppss)) 0)
+                              (save-excursion
+                                     (beginning-of-line)
+                                     (search-forward "let" (line-end-position) t)))
+                           (search-forward ":=" end t))
+                         (point)))
+         (colon-equals-line-number (line-number-at-pos colon-equals)))
+    ;; for lines below the current line up through the colon-equals
+    ;; line, we make sure that they begin with four spaces.
+    (save-excursion
+      (goto-char beg)
+      (forward-line)
+      (while (and (< (point)
+                     end)
+                  (<= (line-number-at-pos)
+                      colon-equals-line-number))
+        (beginning-of-line)
+        (when (looking-at " ")
+          (delete-horizontal-space)
+          (insert "    "))
+        (forward-line)))))
+
+;;;###autoload
+(defun czm-lean4-format-buffer ()
+  "Format function at point according to the library guidelines.
+Applies `czm-lean4-format-function' to each function in the
+buffer."
+  (interactive)
+  (goto-char (point-max))
+  (while (> (point) (point-min))
+    (beginning-of-defun)
+    (when (looking-at
+           (regexp-opt
+            (append czm-lean4-headings czm-lean4-heading-prefixes '("open" "@["))))
+      (czm-lean4-format-function))))
+
 (provide 'czm-lean4)
 ;;; czm-lean4.el ends here
