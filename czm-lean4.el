@@ -36,6 +36,21 @@
 ;; Could also just use forward-sentence/backward-sentence for the next
 ;; two functions
 
+(defun czm-lean4--blank-or-comment-line-p ()
+  "Returns non-nil when the current line is blank or commented."
+  (save-excursion
+    (beginning-of-line)
+    (or
+     (looking-at-p
+      (rx
+       (or
+        (seq bol (zero-or-more (syntax whitespace))
+             eol)
+        (seq bol (or "--" "/-")
+             (zero-or-more nonl)
+             eol))))
+     (lean4-in-comment-p))))
+
 ;;;###autoload
 (defun czm-lean4-cheap-beginning-of-defun ()
   "Move to last non-blank line after any blank lines."
@@ -44,21 +59,21 @@
     (backward-char)
     (goto-char (line-beginning-position))
     (while (and (not (bobp))
-                (looking-at-p "^\\s-*$"))
+                (czm-lean4--blank-or-comment-line-p))
       (forward-line -1))
     (while (and (not (bobp))
                 (save-excursion
                   (forward-line -1)
-                  (not (looking-at-p "^\\s-*$"))))
+                  (not (czm-lean4--blank-or-comment-line-p))))
       (forward-line -1))))
 
 ;;;###autoload
 (defun czm-lean4-cheap-end-of-defun ()
   "Move to first blank line after some non-blank lines."
   (interactive)
-  (while (and (not (eobp)) (looking-at-p "^\\s-*$"))
+  (while (and (not (eobp)) (czm-lean4--blank-or-comment-line-p))
     (forward-line 1))
-  (while (and (not (eobp)) (not (looking-at-p "^\\s-*$")))
+  (while (and (not (eobp)) (not (czm-lean4--blank-or-comment-line-p)))
     (forward-line 1)))
 
 ;;;###autoload
