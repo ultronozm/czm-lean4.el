@@ -92,7 +92,7 @@ With a PREFIX argument, use a separate buffer."
         (goto-char (point-min))
         (while
             (and
-             (re-search-forward "^\\(noncomputable section\\|section\\|namespace\\|end\\|variable\\).*" nil t)
+             (re-search-forward "^\\(noncomputable section\\|section\\|namespace\\|end\\|variable\\|open\\).*" nil t)
              (< (point)
                 pos))
           (unless (lean4-in-comment-p)
@@ -110,7 +110,7 @@ With a PREFIX argument, use a separate buffer."
                                 matched)
                         my-stack)
                   (setq indent-level (1+ indent-level))))
-               (t                       ; variable
+               (t                       ; variable or open
                 (setq matched (buffer-substring-no-properties
                                (line-beginning-position)
                                (progn (forward-paragraph)
