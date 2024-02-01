@@ -119,9 +119,11 @@ Here's my complete lean4-related configuration, which contains other tweaks that
       (with-current-buffer eldoc-icebox-parent-buffer
         (or
          (eq major-mode 'lean4-mode)
-         (eq (buffer-name) "*Lean Goal*")))
+         (equal (buffer-name)
+                "*Lean Goal*")))
     (add-hook 'eldoc-documentation-functions #'lean4-info-eldoc-function
-              nil t)))
+              nil t)
+    (eldoc-mode)))
 
 (use-package eldoc-icebox
   :elpaca (:host github :repo "ultronozm/eldoc-icebox.el"
