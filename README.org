@@ -13,6 +13,7 @@ This package collects features that I'm using in conjunction with [[https://gith
 7. A command for displaying the info buffer below the current window (rather than the default behavior, to the side - I often prefer one over the other).
 8. Line wrapping for the goal window, with visual indicators where it wraps.
 9. Commands for cycling delimiters, ( -> { -> [ -> ( -> ... and in reverse.
+10. Commands that help format code according to the [[https://leanprover-community.github.io/contribute/style.html][Mathlib conventions]].
    
 
 * Configuration
@@ -48,6 +49,7 @@ Here's my complete lean4-related configuration, which contains other tweaks that
   :commands (lean4-mode)
   :custom
   (lean4-keybinding-lean4-toggle-info (kbd "C-c C-y"))
+  (lean4-info-plain nil)
   :bind (:map lean4-mode-map
               ("RET" . newline)
               ("C-j" . default-indent-new-line)
@@ -78,7 +80,7 @@ Here's my complete lean4-related configuration, which contains other tweaks that
               ("M-[" . czm-lean4-cycle-delimiter-backward))
   :custom
   (czm-lean4-info-window-height-fraction 0.4)
-  (czm-lean4-info-window-width-fraction 0.4)
+  (czm-lean4-info-window-width-fraction 0.47)
   :config
   (advice-add 'lean4-info-buffer-redisplay :around #'czm-lean4-info-buffer-redisplay))
 
@@ -89,24 +91,37 @@ Here's my complete lean4-related configuration, which contains other tweaks that
 
 (defun czm-colorize-lean4-signature ()
   "Highlights the name of each required variable to a Lean4 theorem."
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (while (and (< (point) (point-max))
-                (not (eq (char-after (1+ (point))) ?\:)))
-      (forward-list)
-      (when (eq (char-before) ?\) )
-        (save-excursion
-          (backward-list)
-          (let ((inhibit-read-only t)
-                (start (point))
-                (end (save-excursion (forward-list) (point)))
-                (end-first-symbol (save-excursion (forward-word) (point))))
-            (put-text-property (1+ start) end-first-symbol 'face '(shr-mark))))))))
+  (when
+      (with-current-buffer eldoc-icebox-parent-buffer
+        (or
+         (eq major-mode 'lean4-mode)
+         (eq (buffer-name) "*Lean Goal*")))
+    (save-excursion
+      (goto-char (point-min))
+      (while (and (< (point) (point-max))
+                  (not (eq (char-after (1+ (point))) ?\:)))
+        (forward-list)
+        (when (eq (char-before) ?\))
+          (save-excursion
+            (backward-list)
+            (let ((inhibit-read-only t)
+                  (start (point))
+                  (end (save-excursion (forward-list) (point)))
+                  (end-first-symbol (save-excursion (forward-word) (point)))
+                  (end-symbols (save-excursion (when (search-forward " : " nil t) (- (point) 3)))))
+              (when end-symbols
+                (put-text-property start end 'face '(underline))
+                                        ; shr-mark doesn't work anymore?
+                (put-text-property (1+ start) end-symbols 'face '(highlight underline))))))))))
 
 (defun czm-add-lean4-eldoc ()
-  (add-hook 'eldoc-documentation-functions #'lean4-info-eldoc-function
-            nil t))
+  (when
+      (with-current-buffer eldoc-icebox-parent-buffer
+        (or
+         (eq major-mode 'lean4-mode)
+         (eq (buffer-name) "*Lean Goal*")))
+    (add-hook 'eldoc-documentation-functions #'lean4-info-eldoc-function
+              nil t)))
 
 (use-package eldoc-icebox
   :elpaca (:host github :repo "ultronozm/eldoc-icebox.el"

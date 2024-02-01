@@ -378,6 +378,7 @@ This function assumes that point is on a delimiter character."
         (czm-lean4--cycle-delimiter-helper ch nil)
       (message "Point is not on a delimiter character."))))
 
+;;;###autoload
 (defun czm-lean4-format-function ()
   "Format function at point according to the library guidelines.
 This function assumes that the function or theorem at point has
