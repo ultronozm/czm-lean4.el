@@ -5,7 +5,7 @@
 ;; Author: Paul D. Nelson <nelson.paul.david@gmail.com>
 ;; Version: 0.0
 ;; URL: https://github.com/ultronozm/czm-lean4.el
-;; Package-Requires: ((emacs "29.1") (pos-tip) (consult "1.1") (lsp-mode "8.0.1") (lean4-mode) (mmm) (auctex) (czm-preview))
+;; Package-Requires: ((emacs "29.1") (pos-tip) (consult "1.1") (lsp-mode "8.0.1") (lean4-mode)  (mmm-mode "0.5.9") (auctex) (czm-preview))
 ;; Keywords: convenience
 
 ;; This program is free software; you can redistribute it and/or modify
