@@ -5,7 +5,7 @@
 ;; Author: Paul D. Nelson <nelson.paul.david@gmail.com>
 ;; Version: 0.0
 ;; URL: https://github.com/ultronozm/czm-lean4.el
-;; Package-Requires: ((emacs "29.1") (pos-tip) (consult "1.1") (lsp-mode "8.0.1") (lean4-mode))
+;; Package-Requires: ((emacs "29.1") (pos-tip) (consult "1.1") (lsp-mode "8.0.1") (lean4-mode) (mmm) (auctex) (czm-preview))
 ;; Keywords: convenience
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -32,12 +32,16 @@
 (require 'consult)
 (require 'lsp-mode)
 (require 'lean4-mode)
+(require 'mmm-auto)
+(require 'mmm-region)
+(require 'preview)
+(require 'czm-preview)
 
 ;; Could also just use forward-sentence/backward-sentence for the next
 ;; two functions
 
 (defun czm-lean4--blank-or-comment-line-p ()
-  "Returns non-nil when the current line is blank or commented."
+  "Return non-nil when the current line is blank or commented."
   (save-excursion
     (beginning-of-line)
     (or
@@ -131,14 +135,6 @@ With a PREFIX argument, use a separate buffer."
           (pos-tip-show output nil nil nil 60)
         (with-output-to-temp-buffer "*Variable context for lean4*"
           (princ output))))))
-
-;;;###autoload
-(defun czm-lean4-mode-hook ()
-  "Hook to be used with lean4-mode."
-  (setq-local beginning-of-defun-function #'czm-lean4-cheap-beginning-of-defun)
-  (setq-local end-of-defun-function #'czm-lean4-cheap-end-of-defun)
-  (setq-local outline-regexp "\\(namespace\\|section\\|noncomputable section\\)\\>")
-  (setq-local outline-level 'czm-lean4-outline-level))
 
 ;;;###autoload
 (defun czm-lean4-magit-section-mode-hook ()
@@ -428,6 +424,68 @@ buffer."
            (regexp-opt
             (append czm-lean4-headings czm-lean4-heading-prefixes '("open" "@["))))
       (czm-lean4-format-function))))
+
+(defvar czm-lean4-tex--mode-map (make-sparse-keymap)
+  "Keymap for `czm-lean4-tex--mode'.")
+
+(define-minor-mode czm-lean4-tex--mode
+  "Minor mode for latex blocks."
+  :init-value nil
+  :lighter nil
+  :keymap czm-lean4-tex--mode-map)
+
+(defun czm-lean4-tex--initialize ()
+  "Initialize `czm-lean4-tex--mode'."
+  (mmm-add-classes
+   '((czm-lean4-tex
+      :submode latex-mode
+      :face mmm-default-submode-face
+      :front "/-%%"
+      :back "%%-/"
+      :save-matches 1
+      :insert ((?s lean-latex nil @ "/-%%" @ "\n" _ "\n" @ "%%-/" @))
+      :submode-hook (lambda () (czm-lean4-tex--mode 1)))))
+  (mmm-add-mode-ext-class 'lean4-mode nil 'czm-lean4-tex))
+
+
+(defun czm-lean4-tex--enable ()
+  "Enable `czm-lean4-tex--mode' in the current buffer."
+  (czm-lean4-tex--mode 1))
+
+(defun czm-lean4-tex--disable ()
+  "Disable `czm-lean4-tex--mode' in the current buffer."
+  (czm-lean4-tex--mode 0))
+
+(defun czm-lean4-tex-setup ()
+  "Set up LaTeX preview for lean4-mode."
+  (czm-lean4-tex--initialize)
+  (add-hook 'mmm-latex-mode-enter-hook #'czm-lean4-tex--enable)
+  (add-hook 'mmm-latex-mode-exit-hook #'czm-lean4-tex--disable))
+
+(defcustom czm-lean4-TeX-master nil
+  "TeX-master value to be used for AUCTeX preview."
+  :type 'file
+  :group 'czm-lean4)
+
+;;;###autoload
+(defun czm-lean4-mode-hook ()
+  "Hook to be used with lean4-mode."
+  (setq-local beginning-of-defun-function #'czm-lean4-cheap-beginning-of-defun)
+  (setq-local end-of-defun-function #'czm-lean4-cheap-end-of-defun)
+  (setq-local outline-regexp "\\(namespace\\|section\\|noncomputable section\\)\\>")
+  (setq-local outline-level 'czm-lean4-outline-level)
+  (czm-lean4-tex-setup))
+
+;;;###autoload
+(defun czm-lean4-preview-fold-block ()
+  "Fold the current block and preview it.
+Block delimited by /-%% and %%-/."
+  (interactive)
+  (save-excursion
+    (let ((beg (re-search-backward "/-%%" nil t))
+          (end (re-search-forward "%%-/" nil t)))
+      (when (and beg end)
+        (preview-region beg end)))))
 
 (provide 'czm-lean4)
 ;;; czm-lean4.el ends here
