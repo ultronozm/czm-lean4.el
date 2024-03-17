@@ -438,7 +438,7 @@ buffer."
   "Initialize `czm-lean4-tex--mode'."
   (mmm-add-classes
    '((czm-lean4-tex
-      :submode latex-mode
+      :submode LaTeX-mode
       :face mmm-default-submode-face
       :front "/-%%"
       :back "%%-/"
@@ -485,7 +485,7 @@ Block delimited by /-%% and %%-/."
     (let ((beg (re-search-backward "/-%%" nil t))
           (end (re-search-forward "%%-/" nil t)))
       (when (and beg end)
-        (preview-region beg end)))))
+        (czm-preview-fold-region-anywhere beg end)))))
 
 (provide 'czm-lean4)
 ;;; czm-lean4.el ends here
