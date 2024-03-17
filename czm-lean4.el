@@ -425,17 +425,17 @@ buffer."
             (append czm-lean4-headings czm-lean4-heading-prefixes '("open" "@["))))
       (czm-lean4-format-function))))
 
-(defvar czm-lean4-tex--mode-map (make-sparse-keymap)
-  "Keymap for `czm-lean4-tex--mode'.")
+(defvar czm-lean4-tex-mode-map (make-sparse-keymap)
+  "Keymap for `czm-lean4-tex-mode'.")
 
-(define-minor-mode czm-lean4-tex--mode
+(define-minor-mode czm-lean4-tex-mode
   "Minor mode for latex blocks."
   :init-value nil
   :lighter nil
-  :keymap czm-lean4-tex--mode-map)
+  :keymap czm-lean4-tex-mode-map)
 
 (defun czm-lean4-tex--initialize ()
-  "Initialize `czm-lean4-tex--mode'."
+  "Initialize `czm-lean4-tex-mode'."
   (mmm-add-classes
    '((czm-lean4-tex
       :submode LaTeX-mode
@@ -444,17 +444,17 @@ buffer."
       :back "%%-/"
       :save-matches 1
       :insert ((?s lean-latex nil @ "/-%%" @ "\n" _ "\n" @ "%%-/" @))
-      :submode-hook (lambda () (czm-lean4-tex--mode 1)))))
+      :submode-hook (lambda () (czm-lean4-tex-mode 1)))))
   (mmm-add-mode-ext-class 'lean4-mode nil 'czm-lean4-tex))
 
 
 (defun czm-lean4-tex--enable ()
-  "Enable `czm-lean4-tex--mode' in the current buffer."
-  (czm-lean4-tex--mode 1))
+  "Enable `czm-lean4-tex-mode' in the current buffer."
+  (czm-lean4-tex-mode 1))
 
 (defun czm-lean4-tex--disable ()
-  "Disable `czm-lean4-tex--mode' in the current buffer."
-  (czm-lean4-tex--mode 0))
+  "Disable `czm-lean4-tex-mode' in the current buffer."
+  (czm-lean4-tex-mode 0))
 
 (defun czm-lean4-tex-setup ()
   "Set up LaTeX preview for lean4-mode."
@@ -476,14 +476,31 @@ buffer."
   (setq-local outline-level 'czm-lean4-outline-level)
   (czm-lean4-tex-setup))
 
+(defun czm-lean4--current-mmm-LaTeX-region ()
+  "Return (beg . end) for mmm-mode LaTeX region at point, or nil."
+  (let ((overlays (overlays-at (point)))
+        result)
+    (while (and overlays (not result))
+      (let* ((overlay (car overlays))
+             (properties (overlay-properties overlay))
+             (mmm-mode (plist-get properties 'mmm-mode)))
+        (when (eq mmm-mode 'LaTeX-mode)
+          (setq result (cons (overlay-start overlay) (overlay-end overlay))))
+        (setq overlays (cdr overlays))))
+    result))
+
 ;;;###autoload
 (defun czm-lean4-preview-fold-block ()
   "Fold the current block and preview it.
 Block delimited by /-%% and %%-/."
   (interactive)
   (save-excursion
-    (let ((beg (re-search-backward "/-%%" nil t))
-          (end (re-search-forward "%%-/" nil t)))
+    (let
+        ;; ((beg (re-search-backward "/-%%" nil t))
+        ;;  (end (re-search-forward "%%-/" nil t)))
+        ((region (czm-lean4--current-mmm-LaTeX-region))
+         (beg (car region))
+         (end (cdr region)))
       (when (and beg end)
         (czm-preview-fold-region-anywhere beg end)))))
 
