@@ -495,7 +495,7 @@ buffer."
 Block delimited by /-%% and %%-/."
   (interactive)
   (save-excursion
-    (let
+    (let*
         ;; ((beg (re-search-backward "/-%%" nil t))
         ;;  (end (re-search-forward "%%-/" nil t)))
         ((region (czm-lean4--current-mmm-LaTeX-region))
