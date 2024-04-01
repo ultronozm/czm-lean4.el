@@ -443,10 +443,8 @@ buffer."
       :front "/-%%"
       :back "%%-/"
       :save-matches 1
-      :insert ((?s lean-latex nil @ "/-%%" @ "\n" _ "\n" @ "%%-/" @))
-      :submode-hook (lambda () (czm-lean4-tex-mode 1)))))
+      :insert ((?s lean-latex nil @ "/-%%" @ "\n" _ "\n" @ "%%-/" @)))))
   (mmm-add-mode-ext-class 'lean4-mode nil 'czm-lean4-tex))
-
 
 (defun czm-lean4-tex--enable ()
   "Enable `czm-lean4-tex-mode' in the current buffer."
@@ -459,8 +457,8 @@ buffer."
 (defun czm-lean4-tex-setup ()
   "Set up LaTeX preview for lean4-mode."
   (czm-lean4-tex--initialize)
-  (add-hook 'mmm-latex-mode-enter-hook #'czm-lean4-tex--enable)
-  (add-hook 'mmm-latex-mode-exit-hook #'czm-lean4-tex--disable))
+  (add-hook 'mmm-LaTeX-mode-enter-hook #'czm-lean4-tex--enable)
+  (add-hook 'mmm-LaTeX-mode-exit-hook #'czm-lean4-tex--disable))
 
 (defcustom czm-lean4-TeX-master nil
   "TeX-master value to be used for AUCTeX preview."
