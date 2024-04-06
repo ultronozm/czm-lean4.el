@@ -502,5 +502,22 @@ Block delimited by /-%% and %%-/."
       (when (and beg end)
         (czm-preview-fold-region-anywhere beg end)))))
 
+(easy-menu-define czm-lean4-menu lean4-mode-map
+  "Menu for the Lean major mode."
+  `("czm-lean4"
+    ["Show variables" czm-lean4-show-variables t]
+    ["Toggle info pause" czm-lean4-toggle-info-pause t]
+    ["Search Mathlib" czm-lean4-search-mathlib t]
+    ["Search Mathlib headings" czm-lean4-search-mathlib-headings t]
+    ["Insert section or namespace" czm-lean4-insert-section-or-namespace t]
+    ["Insert comment block" czm-lean4-insert-comment-block t]
+    ["Toggle info split below" czm-lean4-toggle-info-split-below t]
+    ["Toggle info split right" czm-lean4-toggle-info-split-right t]
+    ["Cycle delimiter forward" czm-lean4-cycle-delimiter-forward t]
+    ["Cycle delimiter backward" czm-lean4-cycle-delimiter-backward t]
+    ["Format function" czm-lean4-format-function t]
+    ["Format buffer" czm-lean4-format-buffer t]
+    ["Preview fold block" czm-lean4-preview-fold-block t]))
+
 (provide 'czm-lean4)
 ;;; czm-lean4.el ends here
