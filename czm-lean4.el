@@ -448,11 +448,14 @@ buffer."
 
 (defun czm-lean4-tex--enable ()
   "Enable `czm-lean4-tex-mode' in the current buffer."
-  (czm-lean4-tex-mode 1))
+  (czm-lean4-tex-mode 1)
+  (TeX-fold-mode 1))
 
 (defun czm-lean4-tex--disable ()
   "Disable `czm-lean4-tex-mode' in the current buffer."
-  (czm-lean4-tex-mode 0))
+  (czm-lean4-tex-mode 0)
+  (TeX-fold-mode 0)
+  (TeX-fold-buffer))
 
 (defun czm-lean4-tex-setup ()
   "Set up LaTeX preview for lean4-mode."
