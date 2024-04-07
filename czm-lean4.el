@@ -5,7 +5,7 @@
 ;; Author: Paul D. Nelson <nelson.paul.david@gmail.com>
 ;; Version: 0.0
 ;; URL: https://github.com/ultronozm/czm-lean4.el
-;; Package-Requires: ((emacs "29.1") (pos-tip) (consult "1.1") (lsp-mode "8.0.1") (lean4-mode)  (mmm-mode "0.5.9") (auctex) (czm-preview))
+;; Package-Requires: ((emacs "29.1") (pos-tip "0.4.7") (consult "1.1") (lsp-mode "8.0.1") (lean4-mode)  (mmm-mode "0.5.9") (auctex) (czm-preview))
 ;; Keywords: convenience
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -36,6 +36,7 @@
 (require 'mmm-region)
 (require 'preview)
 (require 'czm-preview)
+(require 'tex-fold)
 
 ;; Could also just use forward-sentence/backward-sentence for the next
 ;; two functions
@@ -195,7 +196,7 @@ Credit: felipeochoa, https://github.com/leanprover/lean4-mode/issues/22."
            nil))))
 
 (defcustom czm-lean4-search-function #'consult-ripgrep
-  "Function to use for searching in lean4-mode."
+  "Function to use for searching in `lean4-mode'."
   :type 'function
   :group 'czm-lean4)
 
@@ -458,19 +459,19 @@ buffer."
   (TeX-fold-region (point-min) (point-max)))
 
 (defun czm-lean4-tex-setup ()
-  "Set up LaTeX preview for lean4-mode."
+  "Set up LaTeX preview for `lean4-mode'."
   (czm-lean4-tex--initialize)
   (add-hook 'mmm-LaTeX-mode-enter-hook #'czm-lean4-tex--enable)
   (add-hook 'mmm-LaTeX-mode-exit-hook #'czm-lean4-tex--disable))
 
 (defcustom czm-lean4-TeX-master nil
-  "TeX-master value to be used for AUCTeX preview."
+  "Value of `TeX-master' to be used for AUCTeX preview."
   :type 'file
   :group 'czm-lean4)
 
 ;;;###autoload
 (defun czm-lean4-mode-hook ()
-  "Hook to be used with lean4-mode."
+  "Hook to be used with `lean4-mode'."
   (setq-local beginning-of-defun-function #'czm-lean4-cheap-beginning-of-defun)
   (setq-local end-of-defun-function #'czm-lean4-cheap-end-of-defun)
   (setq-local outline-regexp "\\(namespace\\|section\\|noncomputable section\\)\\>")
@@ -478,7 +479,7 @@ buffer."
   (czm-lean4-tex-setup))
 
 (defun czm-lean4--current-mmm-LaTeX-region ()
-  "Return (beg . end) for mmm-mode LaTeX region at point, or nil."
+  "Return (beg . end) for `mmm-mode' LaTeX region at point, or nil."
   (let ((overlays (overlays-at (point)))
         result)
     (while (and overlays (not result))
