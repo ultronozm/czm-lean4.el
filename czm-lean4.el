@@ -455,7 +455,7 @@ buffer."
   "Disable `czm-lean4-tex-mode' in the current buffer."
   (czm-lean4-tex-mode 0)
   (TeX-fold-mode 0)
-  (TeX-fold-buffer))
+  (TeX-fold-region (point-min) (point-max)))
 
 (defun czm-lean4-tex-setup ()
   "Set up LaTeX preview for lean4-mode."
