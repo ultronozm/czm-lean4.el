@@ -5,7 +5,7 @@
 ;; Author: Paul D. Nelson <nelson.paul.david@gmail.com>
 ;; Version: 0.0
 ;; URL: https://github.com/ultronozm/czm-lean4.el
-;; Package-Requires: ((emacs "29.1") (pos-tip "0.4.7") (consult "1.1") (lsp-mode "8.0.1") (lean4-mode)  (mmm-mode "0.5.9") (auctex) (czm-preview))
+;; Package-Requires: ((emacs "29.1") (pos-tip "0.4.7") (consult "1.1") (lsp-mode "8.0.1") (lean4-mode)  (mmm-mode "0.5.9") (auctex))
 ;; Keywords: convenience
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -30,12 +30,10 @@
 (require 'pos-tip)
 (require 'project)
 (require 'consult)
-(require 'lsp-mode)
 (require 'lean4-mode)
 (require 'mmm-auto)
 (require 'mmm-region)
 (require 'preview)
-(require 'czm-preview)
 (require 'tex-fold)
 
 ;; Could also just use forward-sentence/backward-sentence for the next
@@ -260,8 +258,9 @@ the region and FOOTER after the region."
     (save-excursion
       (insert "\n" footer "\n")))
   ;; this last bit updates the font coloring
-  (lsp-on-change 0 (buffer-size)
-                 (buffer-size)))
+  ;; (lsp-on-change 0 (buffer-size)
+  ;;                (buffer-size))
+  )
 
 ;;;###autoload
 (defun czm-lean4-insert-section-or-namespace (&optional arg)
@@ -504,7 +503,12 @@ Block delimited by /-%% and %%-/."
          (beg (car region))
          (end (cdr region)))
       (when (and beg end)
-        (czm-preview-fold-region-anywhere beg end)))))
+        (unless TeX-fold-mode
+          (TeX-fold-mode))
+        (TeX-fold-region beg end)
+        (czm-preview-region-anywhere beg end)
+        (setq TeX-master "~/doit/preview-master.tex")
+        (preview-region beg end)))))
 
 (easy-menu-define czm-lean4-menu lean4-mode-map
   "Menu for the Lean major mode."
