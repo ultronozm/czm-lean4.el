@@ -425,48 +425,12 @@ buffer."
             (append czm-lean4-headings czm-lean4-heading-prefixes '("open" "@["))))
       (czm-lean4-format-function))))
 
-(defvar czm-lean4-tex-mode-map (make-sparse-keymap)
-  "Keymap for `czm-lean4-tex-mode'.")
-
-(define-minor-mode czm-lean4-tex-mode
-  "Minor mode for latex blocks."
-  :init-value nil
-  :lighter nil
-  :keymap czm-lean4-tex-mode-map)
-
-(defun czm-lean4-tex--initialize ()
-  "Initialize `czm-lean4-tex-mode'."
-  (mmm-add-classes
-   '((czm-lean4-tex
-      :submode LaTeX-mode
-      :face mmm-default-submode-face
-      :front "/-%%"
-      :back "%%-/"
-      :save-matches 1
-      :insert ((?s lean-latex nil @ "/-%%" @ "\n" _ "\n" @ "%%-/" @)))))
-  (mmm-add-mode-ext-class 'lean4-mode nil 'czm-lean4-tex))
-
-(defun czm-lean4-tex--enable ()
-  "Enable `czm-lean4-tex-mode' in the current buffer."
-  (czm-lean4-tex-mode 1)
-  (TeX-fold-mode 1))
-
-(defun czm-lean4-tex--disable ()
-  "Disable `czm-lean4-tex-mode' in the current buffer."
-  (czm-lean4-tex-mode 0)
-  (TeX-fold-mode 0)
-  (TeX-fold-region (point-min) (point-max)))
-
 (defun czm-lean4-tex-setup ()
   "Set up LaTeX preview for `lean4-mode'."
-  (czm-lean4-tex--initialize)
-  (add-hook 'mmm-LaTeX-mode-enter-hook #'czm-lean4-tex--enable)
-  (add-hook 'mmm-LaTeX-mode-exit-hook #'czm-lean4-tex--disable))
-
-(defcustom czm-lean4-TeX-master nil
-  "Value of `TeX-master' to be used for AUCTeX preview."
-  :type 'file
-  :group 'czm-lean4)
+  (setq TeX-header-end LaTeX-header-end
+        TeX-trailer-start LaTeX-trailer-start)
+  (TeX-fold-mode 1)
+  (add-hook 'post-command-hook 'preview-move-point))
 
 ;;;###autoload
 (defun czm-lean4-mode-hook ()
@@ -475,40 +439,147 @@ buffer."
   (setq-local end-of-defun-function #'czm-lean4-cheap-end-of-defun)
   (setq-local outline-regexp "\\(namespace\\|section\\|noncomputable section\\)\\>")
   (setq-local outline-level 'czm-lean4-outline-level)
+  (setq-local tab-width 2)
+  (setq-local indent-line-function #'indent-relative)
   (czm-lean4-tex-setup))
 
-(defun czm-lean4--current-mmm-LaTeX-region ()
-  "Return (beg . end) for `mmm-mode' LaTeX region at point, or nil."
-  (let ((overlays (overlays-at (point)))
-        result)
-    (while (and overlays (not result))
-      (let* ((overlay (car overlays))
-             (properties (overlay-properties overlay))
-             (mmm-mode (plist-get properties 'mmm-mode)))
-        (when (eq mmm-mode 'LaTeX-mode)
-          (setq result (cons (overlay-start overlay) (overlay-end overlay))))
-        (setq overlays (cdr overlays))))
-    result))
+(defconst czm-lean4-tex-open-delimiters '("/-%")
+  "List of opening delimiters for LaTeX comment blocks.")
+
+(defconst czm-lean4-tex-close-delimiters '("%-/")
+  "List of closing delimiters for LaTeX comment blocks.")
+
+(defun czm-lean4--current-latex-region ()
+  "Return (beg . end) for the LaTeX comment block at point."
+  (save-excursion
+    (let ((beg (re-search-backward
+                (regexp-opt czm-lean4-tex-open-delimiters)
+                nil t))
+          (end (re-search-forward
+                (regexp-opt czm-lean4-tex-close-delimiters)
+                nil t)))
+      (when (and beg end)
+        (cons beg end)))))
+
+(defun czm-lean4--preview-or-clear-region (beg end clearout)
+  "Fold and preview or clearout the region from BEG to END.
+If CLEAROUT is non-nil, clear out preview and fold overlays in the
+region."
+  (if clearout
+      (progn
+        (preview-clearout beg end)
+        (TeX-fold-clearout-region beg end))
+    (let ((buffer-file-name nil))
+      (TeX-fold-region beg end)
+      (preview-region beg end))))
 
 ;;;###autoload
-(defun czm-lean4-preview-fold-block ()
-  "Fold the current block and preview it.
-Block delimited by /-%% and %%-/."
-  (interactive)
+(defun czm-lean4-preview-fold-block (arg)
+  "Fold and preview or clearout the current LaTeX comment block.
+With prefix ARG, do clearout, otherwise fold and preview."
+  (interactive "P")
   (save-excursion
-    (let*
-        ;; ((beg (re-search-backward "/-%%" nil t))
-        ;;  (end (re-search-forward "%%-/" nil t)))
-        ((region (czm-lean4--current-mmm-LaTeX-region))
-         (beg (car region))
-         (end (cdr region)))
-      (when (and beg end)
-        (unless TeX-fold-mode
-          (TeX-fold-mode))
-        (TeX-fold-region beg end)
-        (czm-preview-region-anywhere beg end)
-        (setq TeX-master "~/doit/preview-master.tex")
-        (preview-region beg end)))))
+    (let ((region (czm-lean4--current-latex-region)))
+      (when region
+        (let ((beg (car region))
+              (end (cdr region)))
+          (czm-lean4--preview-or-clear-region beg end arg))))))
+
+;;; Proof state overlay
+
+(defface czm-lean4-overlay-face
+  '((t :background "#eeeeff"))  ; Light blue background
+  "Face for czm-lean4 overlay text.")
+
+(defvar-local czm-lean4--goal-overlay nil
+  "Overlay for displaying Lean4 goal information.")
+
+(defun czm-lean4--fontify-text (text)
+  "Fontify TEXT as lean4-mode content."
+  (with-temp-buffer
+    (insert text)
+    (delay-mode-hooks (lean4-mode))
+    (font-lock-ensure)
+    (buffer-string)))
+
+(defun czm-lean4--add-background-to-text (text)
+  "Add a background color to TEXT without changing other properties."
+  (let ((len (length text)))
+    (add-face-text-property 0 len 'czm-lean4-overlay-face t text)
+    text))
+
+(defun czm-lean4--update-overlay-content (ov text)
+  "Update the content of overlay OV with TEXT."
+  (let* ((fontified-text (czm-lean4--fontify-text text))
+         (background-text (czm-lean4--add-background-to-text fontified-text)))
+    (overlay-put ov 'after-string (concat background-text "\n"))))
+
+(defun czm-lean4-remove-goal-overlay ()
+  "Remove the goal overlay if it exists."
+  (when czm-lean4--goal-overlay
+    (delete-overlay czm-lean4--goal-overlay)
+    (setq czm-lean4--goal-overlay nil)))
+
+(defun czm-lean4--apply-to-goal (cb)
+  "Apply CB to the first goal."
+  (when-let ((server (eglot-current-server)))
+    (jsonrpc-async-request
+     server :$/lean/plainGoal (eglot--TextDocumentPositionParams)
+     :success-fn
+     (lambda (response)
+       (funcall cb (when-let* ((goals (plist-get response :goals))
+                               ((not (seq-empty-p goals)))
+                               (goal (seq-first goals)))
+                     (czm-lean4--fontify-text goal)))))))
+
+(defun czm-lean4-update-goal-overlay ()
+  "Update the goal overlay with current goal information."
+  (when czm-lean4--goal-overlay
+    (let* ((buffer (current-buffer))
+           (cb (lambda (goal)
+                 (with-current-buffer buffer
+                   (czm-lean4--update-overlay-content
+                    czm-lean4--goal-overlay
+                    (or goal "Goals accomplished"))))))
+      (czm-lean4--apply-to-goal cb))))
+
+(defun czm-lean4-create-goal-overlay ()
+  "Create the goal overlay if it doesn't exist."
+  (unless czm-lean4--goal-overlay
+    (let* ((next-line-pos (save-excursion
+                            (forward-line 1)
+                            (line-beginning-position)))
+           (buffer-end (buffer-end 1)))
+      ;; If we're on the last line, insert a newline
+      (when (= next-line-pos buffer-end)
+        (save-excursion
+          (goto-char buffer-end)
+          (insert "\n")
+          (setq next-line-pos (point))))
+      (setq czm-lean4--goal-overlay (make-overlay next-line-pos next-line-pos))
+      (czm-lean4--update-overlay-content czm-lean4--goal-overlay "Loading goal..."))))
+
+;;;###autoload
+(defun czm-lean4-toggle-goal-overlay ()
+  "Toggle the display of the goal overlay."
+  (interactive)
+  (if czm-lean4--goal-overlay
+      (czm-lean4-remove-goal-overlay)
+    (czm-lean4-create-goal-overlay)
+    (czm-lean4-update-goal-overlay)))
+
+;;;###autoload
+(define-minor-mode czm-lean4-live-goal-mode
+  "Toggle live goal updates."
+  :lighter " LiveGoal"
+  (if czm-lean4-live-goal-mode
+      (progn
+        (add-hook 'lean4-idle-hook #'czm-lean4-update-goal-overlay nil t)
+        (when czm-lean4--goal-overlay
+          (czm-lean4-update-goal-overlay)))
+    (remove-hook 'lean4-idle-hook #'czm-lean4-update-goal-overlay t)))
+
+;;; Menu
 
 (easy-menu-define czm-lean4-menu lean4-mode-map
   "Menu for the Lean major mode."
@@ -525,7 +596,9 @@ Block delimited by /-%% and %%-/."
     ["Cycle delimiter backward" czm-lean4-cycle-delimiter-backward t]
     ["Format function" czm-lean4-format-function t]
     ["Format buffer" czm-lean4-format-buffer t]
-    ["Preview fold block" czm-lean4-preview-fold-block t]))
+    ["Preview fold block" czm-lean4-preview-fold-block t]
+    ["Toggle goal overlay" czm-lean4-toggle-goal-overlay t]
+    ["Toggle updates for overlay" czm-lean4-live-goal-mode t]))
 
 (provide 'czm-lean4)
 ;;; czm-lean4.el ends here
