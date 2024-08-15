@@ -492,31 +492,41 @@ With prefix ARG, do clearout, otherwise fold and preview."
 (defvar-local czm-lean4--goal-overlay nil
   "Overlay for displaying Lean4 goal information.")
 
-(defun czm-lean4--fontify-text (text)
-  "Fontify TEXT as lean4-mode content."
-  (with-temp-buffer
-    (insert text)
-    (delay-mode-hooks (lean4-mode))
-    (font-lock-ensure)
-    (buffer-string)))
-
 (defun czm-lean4--add-background-to-text (text)
   "Add a background color to TEXT without changing other properties."
   (let ((len (length text)))
-    (add-face-text-property 0 len 'czm-lean4-overlay-face t text)
+    (font-lock-append-text-property 0 len 'face 'czm-lean4-overlay-face text)
     text))
 
 (defun czm-lean4--update-overlay-content (ov text)
   "Update the content of overlay OV with TEXT."
-  (let* ((fontified-text (czm-lean4--fontify-text text))
-         (background-text (czm-lean4--add-background-to-text fontified-text)))
-    (overlay-put ov 'after-string (concat background-text "\n"))))
+  (let* ((text (czm-lean4--add-background-to-text text)))
+    (overlay-put ov 'after-string (concat text "\n"))))
 
 (defun czm-lean4-remove-goal-overlay ()
   "Remove the goal overlay if it exists."
   (when czm-lean4--goal-overlay
     (delete-overlay czm-lean4--goal-overlay)
     (setq czm-lean4--goal-overlay nil)))
+
+(defun czm-lean4--fontify-text (text)
+  "Fontify TEXT as lean4-mode content."
+  (let ((text (with-temp-buffer
+                (lean4-info-mode)
+                (insert text)
+                (font-lock-ensure)
+                (buffer-string))))
+    (with-temp-buffer
+      (insert text)
+      (goto-char (point-min))
+      (save-match-data
+        (while (re-search-forward "\\(\\sw+\\)✝\\([¹²³⁴-⁹⁰]*\\)" nil t)
+          (replace-match
+           (propertize (s-concat (match-string-no-properties 1)
+                                 (match-string-no-properties 2))
+                       'font-lock-face 'font-lock-comment-face)
+           'fixedcase 'literal)))
+      (buffer-string))))
 
 (defun czm-lean4--apply-to-goal (cb)
   "Apply CB to the first goal."
@@ -527,8 +537,11 @@ With prefix ARG, do clearout, otherwise fold and preview."
      (lambda (response)
        (funcall cb (when-let* ((goals (plist-get response :goals))
                                ((not (seq-empty-p goals)))
-                               (goal (seq-first goals)))
-                     (czm-lean4--fontify-text goal)))))))
+                               (goal (seq-first goals))
+                               (goal (replace-regexp-in-string
+                                      "^" "  " goal))
+                               (goal (czm-lean4--fontify-text goal)))
+                     goal))))))
 
 (defun czm-lean4-update-goal-overlay ()
   "Update the goal overlay with current goal information."
