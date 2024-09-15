@@ -483,6 +483,18 @@ With prefix ARG, do clearout, otherwise fold and preview."
               (end (cdr region)))
           (czm-lean4--preview-or-clear-region beg end arg))))))
 
+;; taken from
+;; https://github.com/leanprover/lean-mode/commit/b224da9d2b339514c2577e5ee4c675b03c978bcd
+(defun czm-lean4-set-imenu-generic-expression ()
+  "Set `imenu-generic-expression' for Lean4 mode."
+  (setq imenu-generic-expression
+        '(("Inductive" "^ *\\(?:@\\[.*\\]\\)? *inductive +\\([^\n ]+\\)" 1)
+          ("Function" "^ *\\(?:@\\[.*\\]\\)? *def +\\([^\n ]+\\)" 1)
+          ("Lemma" "^ *\\(?:@\\[.*\\]\\)? *lemma +\\([^\n ]+\\)" 1)
+          ("Theorem" "^ *\\(?:@\\[.*\\]\\)? *theorem +\\([^\n ]+\\)" 1)
+          ("Theorem" "^ *\\(?:@\\[.*\\]\\)? *theorem +\\([^\n ]+\\)" 1)
+          ("Namespace" "^ *\\(?:@\\[.*\\]\\)? *namespace +\\([^\n ]+\\)" 1))))
+
 ;;; Proof state overlay
 
 (defface czm-lean4-overlay-face
