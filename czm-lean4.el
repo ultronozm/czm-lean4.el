@@ -495,6 +495,26 @@ With prefix ARG, do clearout, otherwise fold and preview."
           ("Theorem" "^ *\\(?:@\\[.*\\]\\)? *theorem +\\([^\n ]+\\)" 1)
           ("Namespace" "^ *\\(?:@\\[.*\\]\\)? *namespace +\\([^\n ]+\\)" 1))))
 
+(defun czm-lean4-colorize-theorem-signature (start end)
+  "Apply colorization to Lean4 theorem signature from START to END.
+Highlights variable names and underlines the entire signature.
+Useful in when displaying Lean4 code in other buffers."
+  (save-excursion
+    (goto-char start)
+    (while (and (< (point) end)
+                (not (eq (char-after (1+ (point))) ?\:)))
+      (forward-list)
+      (when (eq (char-before) ?\))
+        (save-excursion
+          (backward-list)
+          (let ((inhibit-read-only t)
+                (sig-start (point))
+                (sig-end (save-excursion (forward-list) (point)))
+                (vars-end (save-excursion (when (search-forward " : " nil t) (- (point) 3)))))
+            (when vars-end
+              (put-text-property sig-start sig-end 'face '(underline))
+              (put-text-property (1+ sig-start) vars-end 'face '(highlight underline)))))))))
+
 ;;; Proof state overlay
 
 (defface czm-lean4-overlay-face
