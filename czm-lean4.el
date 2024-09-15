@@ -486,8 +486,8 @@ With prefix ARG, do clearout, otherwise fold and preview."
 ;;; Proof state overlay
 
 (defface czm-lean4-overlay-face
-  '((t :background "#eeeeff"))  ; Light blue background
-  "Face for czm-lean4 overlay text.")
+  '((t :inherit shr-mark :extend t))
+  "Face for flymake-overlays overlay text.")
 
 (defvar-local czm-lean4--goal-overlay nil
   "Overlay for displaying Lean4 goal information.")
