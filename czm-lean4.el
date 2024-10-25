@@ -515,6 +515,35 @@ Useful in when displaying Lean4 code in other buffers."
               (put-text-property sig-start sig-end 'face '(underline))
               (put-text-property (1+ sig-start) vars-end 'face '(highlight underline)))))))))
 
+;;; Miscellaneous useful functions
+
+(defun czm-lean4-maybe-colorize (text)
+  "Highlight theorem signatures in the given TEXT for Lean4 buffers."
+  (let ((mode major-mode))
+    (with-temp-buffer
+      (delay-mode-hooks (funcall mode))
+      (insert text)
+      (font-lock-ensure)
+      (when (eq mode 'lean4-mode)
+        (czm-lean4-colorize-theorem-signature (point-min) (point-max)))
+      (buffer-string))))
+
+(defun czm-lean4-fontify-buffer ()
+  "Fontify buffer, possibly with Lean4 theorem signatures.
+This function is intended to be used with flymake overlays."
+  (let ((text (buffer-string))
+        (mode major-mode))
+    (let ((newtext
+           (with-temp-buffer
+             (delay-mode-hooks (funcall mode))
+             (insert text)
+             (font-lock-ensure)
+             (when (eq mode 'lean4-mode)
+               (czm-lean4-colorize-theorem-signature (point-min) (point-max)))
+             (buffer-string))))
+      (delete-region (point-min) (point-max))
+      (insert newtext))))
+
 ;;; Proof state overlay
 
 (defface czm-lean4-overlay-face
