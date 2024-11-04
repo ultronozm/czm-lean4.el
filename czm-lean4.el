@@ -185,7 +185,7 @@ Credit: felipeochoa, https://github.com/leanprover/lean4-mode/issues/22."
     (cond ((string= root-folder-name "mathlib")
            ;; Get parent of 'project-root' and append "Mathlib"
            (expand-file-name  "Mathlib" project-root))
-          ((file-exists-p (concat project-root ".lake/packages/mathlib/Mathlib"))
+          ((file-exists-p (expand-file-name ".lake/packages/mathlib/Mathlib" project-root))
            ;; Append ".lake/packages/mathlib/Mathlib" to project-root
            (expand-file-name  ".lake/packages/mathlib/Mathlib" project-root) )
           (t
