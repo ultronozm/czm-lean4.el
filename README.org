@@ -47,7 +47,6 @@ Here's my complete lean4-related configuration, which contains other tweaks that
                  :files ("*.el" "data"))
   :hook (lean4-mode . spout-mode)
   :hook (lean4-mode . company-mode)
-  :commands (lean4-mode)
   :custom
   (lean4-keybinding-lean4-toggle-info (kbd "C-c C-y"))
   (lean4-info-plain nil)
@@ -55,7 +54,6 @@ Here's my complete lean4-related configuration, which contains other tweaks that
               ("RET" . newline)
               ("C-j" . default-indent-new-line)
               ("C-M-i" . company-indent-or-complete-common))
-  :config
   :defer t)
 
 (use-package czm-lean4
@@ -86,7 +84,6 @@ Here's my complete lean4-related configuration, which contains other tweaks that
   (advice-add 'lean4-info-buffer-redisplay :around #'czm-lean4-info-buffer-redisplay))
 
 (use-package eldoc-box
-  :commands (eldoc-box-help-at-point)
   :bind
   (:map global-map ("C-c e" . eldoc-box-help-at-point)))
 
