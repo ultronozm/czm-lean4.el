@@ -34,6 +34,10 @@
 (require 'preview)
 (require 'tex-fold)
 
+(defgroup czm-lean4 nil
+  "Embellishments for lean4-mode."
+  :group 'lean4)
+
 ;; Could also just use forward-sentence/backward-sentence for the next
 ;; two functions
 
