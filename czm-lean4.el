@@ -506,19 +506,29 @@ Highlights variable names and underlines the entire signature.
 Useful in when displaying Lean4 code in other buffers."
   (save-excursion
     (goto-char start)
-    (while (and (< (point) end)
-                (not (eq (char-after (1+ (point))) ?\:)))
-      (forward-list)
-      (when (eq (char-before) ?\))
-        (save-excursion
-          (backward-list)
-          (let ((inhibit-read-only t)
-                (sig-start (point))
-                (sig-end (save-excursion (forward-list) (point)))
-                (vars-end (save-excursion (when (search-forward " : " nil t) (- (point) 3)))))
-            (when vars-end
-              (put-text-property sig-start sig-end 'face '(underline))
-              (put-text-property (1+ sig-start) vars-end 'face '(highlight underline)))))))))
+    (let ((limit end))
+      (while (and (< (point) limit)
+                  (not (eobp))
+                  (not (looking-at-p " : ")))  ; Look for " : " instead of just ":"
+        (condition-case err
+            (progn
+              (forward-list)
+              (when (eq (char-before) ?\))
+                (save-excursion
+                  (backward-list)
+                  (let ((inhibit-read-only t)
+                        (sig-start (point))
+                        (sig-end (save-excursion (forward-list) (point)))
+                        (vars-end (save-excursion 
+                                    (when (search-forward " : " limit t)
+                                      (- (point) 3)))))
+                    (when vars-end
+                      (put-text-property sig-start sig-end 'face '(underline))
+                      (put-text-property (1+ sig-start) vars-end 
+                                         'face '(highlight underline)))))))
+          ;; Always make forward progress on any error
+          (error
+           (forward-char 1)))))))
 
 ;;; Miscellaneous useful functions
 
