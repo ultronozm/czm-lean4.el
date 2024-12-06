@@ -83,8 +83,6 @@ My current complete lean4-related configuration can be found in the =lean= secti
               ("C-c C-y" . czm-lean4-toggle-info-split-right)
               ("M-]" . czm-lean4-cycle-delimiter-forward)
               ("M-[" . czm-lean4-cycle-delimiter-backward))
-  :bind (:map lean4-mode-map
-              ("s-f" . czm-lean4-preview-fold-block))
   :custom
   (czm-lean4-info-window-height-fraction 0.4)
   (czm-lean4-info-window-width-fraction 0.47)
