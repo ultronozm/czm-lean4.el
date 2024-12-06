@@ -39,97 +39,77 @@ Download this repository, install using =M-x package-install-file= (or package-v
 Customize the binds as you like, and use the built-in documentation (=C-h f czm-lean4-whatever=) to see exactly what the commands do.
 
 * More configuration
-Here's my complete lean4-related configuration, which contains other tweaks that seemed best left out of this package.
+My current complete lean4-related configuration can be found in the =lean= section of my [[https://github.com/ultronozm/emacsd/blob/main/init.el][init file]].  It uses [[https://github.com/progfolio/elpaca][elpaca]] and makes use of other packages, including [[https://github.com/ultronozm/eldoc-icebox.el][eldoc-icebox]], [[https://github.com/ultronozm/preview-auto.el][preview-auto]] and [[https://github.com/ultronozm/preview-tailor.el][preview-tailor]].    Here's a lightly edited snapshot, perhaps better suited for inspiration rather than direct use:
 
 #+begin_src elisp
+(defun czm-set-lean4-local-variables ()
+  (setq preview-tailor-local-multiplier 0.7)
+  (setq TeX-master my-preview-master))
+
 (use-package lean4-mode
-  :elpaca (:host github :repo "ultronozm/lean4-mode"
-                 :files ("*.el" "data"))
-  :hook (lean4-mode . spout-mode)
-  :hook (lean4-mode . company-mode)
+  :ensure (:host github :repo "ultronozm/lean4-mode" :files ("*.el" "data"))
+  :diminish
+  :hook
+  (lean4-mode . czm-set-lean4-local-variables)
   :custom
-  (lean4-keybinding-lean4-toggle-info (kbd "C-c C-y"))
+  (lean4-idle-delay 0.02)
   (lean4-info-plain nil)
+  (lean4-info-refresh-even-if-invisible t)
   :bind (:map lean4-mode-map
               ("RET" . newline)
-              ("C-j" . default-indent-new-line)
-              ("C-M-i" . company-indent-or-complete-common))
+              ("C-j" . newline-and-indent)
+              ("C-M-i" . completion-at-point)
+              ("C-c C-k" . quail-show-key))
+  :config
+  (add-to-list 'lean4-workspace-roots "~/.elan/toolchains/leanprover--lean4---v4.15.0-rc1/src/lean/")
   :defer t)
 
 (use-package czm-lean4
-  :elpaca (:host github :repo "ultronozm/czm-lean4.el"
-                 :depth nil)
+  :ensure (:host github :repo "ultronozm/czm-lean4.el" :depth nil)
   :after lean4-mode
-  :hook (lean4-mode . czm-lean4-mode-hook)
+  :hook
+  (lean4-mode . czm-lean4-mode-hook)
   :hook (magit-section-mode . czm-lean4-magit-section-mode-hook)
   :bind (:map lean4-mode-map
               ("C-c v" . czm-lean4-show-variables)
-              ("C-c C-p C-p" . czm-lean4-toggle-info-pause)
+              ;; ("C-c C-p C-p" . czm-lean4-toggle-info-pause)
               ("C-c C-m C-m" . czm-lean4-search-mathlib)
               ("C-c C-m C-h" . czm-lean4-search-mathlib-headings)
+              ("C-c C-m C-g" . czm-lean4-toggle-goal-overlay)
+              ("C-c C-m C-l" . czm-lean4-live-goal-mode)
               ("C-c C-," . czm-lean4-insert-section-or-namespace)
               ("C-c C-." . czm-lean4-insert-comment-block)
               ("C-c C-i" . czm-lean4-toggle-info-split-below)
-              ("C-c C-o" . czm-lean4-toggle-info-split-right)
+              ("C-c C-y" . czm-lean4-toggle-info-split-right)
               ("M-]" . czm-lean4-cycle-delimiter-forward)
-              ("§" . copilot-accept-completion)
-              ("M-§" . copilot-accept-completion-by-word)
-              ("C-§" . copilot-accept-completion-by-line)
-              ("C-M-§" . copilot-accept-completion-by-paragraph)
               ("M-[" . czm-lean4-cycle-delimiter-backward))
+  :bind (:map lean4-mode-map
+              ("s-f" . czm-lean4-preview-fold-block))
   :custom
   (czm-lean4-info-window-height-fraction 0.4)
   (czm-lean4-info-window-width-fraction 0.47)
   :config
-  (advice-add 'lean4-info-buffer-redisplay :around #'czm-lean4-info-buffer-redisplay))
-
-(use-package eldoc-box
-  :bind
-  (:map global-map ("C-c e" . eldoc-box-help-at-point)))
-
-(defun czm-colorize-lean4-signature ()
-  "Highlights the name of each required variable to a Lean4 theorem."
-  (when
-      (with-current-buffer eldoc-icebox-parent-buffer
-        (or
-         (eq major-mode 'lean4-mode)
-         (eq (buffer-name) "*Lean Goal*")))
-    (save-excursion
-      (goto-char (point-min))
-      (while (and (< (point) (point-max))
-                  (not (eq (char-after (1+ (point))) ?\:)))
-        (forward-list)
-        (when (eq (char-before) ?\))
-          (save-excursion
-            (backward-list)
-            (let ((inhibit-read-only t)
-                  (start (point))
-                  (end (save-excursion (forward-list) (point)))
-                  (end-first-symbol (save-excursion (forward-word) (point)))
-                  (end-symbols (save-excursion (when (search-forward " : " nil t) (- (point) 3)))))
-              (when end-symbols
-                (put-text-property start end 'face '(underline))
-                                        ; shr-mark doesn't work anymore?
-                (put-text-property (1+ start) end-symbols 'face '(highlight underline))))))))))
+  (advice-add 'lean4-info-buffer-redisplay :around #'czm-lean4-info-buffer-redisplay)
+  (map-keymap
+   (lambda (key cmd)
+     (define-key lean4-mode-map (vector key) cmd))
+   copilot-completion-map))
 
 (defun czm-add-lean4-eldoc ()
-  (when
-      (with-current-buffer eldoc-icebox-parent-buffer
-        (or
-         (eq major-mode 'lean4-mode)
-         (equal (buffer-name)
-                "*Lean Goal*")))
+  (when (with-current-buffer eldoc-icebox-parent-buffer
+          (or (eq major-mode 'lean4-mode)
+              (equal (buffer-name)
+                     "*Lean Goal*")))
     (add-hook 'eldoc-documentation-functions #'lean4-info-eldoc-function
               nil t)
     (eldoc-mode)))
 
 (use-package eldoc-icebox
-  :elpaca (:host github :repo "ultronozm/eldoc-icebox.el"
-                 :depth nil)
+  :ensure (:host github :repo "ultronozm/eldoc-icebox.el" :depth nil)
   :bind (("C-c C-h" . eldoc-icebox-store)
          ("C-c C-n" . eldoc-icebox-toggle-display))
   :hook
   (eldoc-icebox-post-display . shrink-window-if-larger-than-buffer)
-  (eldoc-icebox-post-display . czm-colorize-lean4-signature)
+  (eldoc-icebox-post-display . czm-lean4-fontify-buffer)
   (eldoc-icebox-post-display . czm-add-lean4-eldoc))
 #+end_src
