@@ -56,29 +56,62 @@
              eol))))
      (lean4-in-comment-p))))
 
+(defun czm-lean4--line-indentation ()
+  "Return the indentation level of the current line."
+  (save-excursion
+    (back-to-indentation)
+    (current-column)))
+
+(defun czm-lean4--outer-level-line-p ()
+  "Return t if current line starts at column 0 (ignoring whitespace)."
+  (= (czm-lean4--line-indentation) 0))
+
 ;;;###autoload
 (defun czm-lean4-cheap-beginning-of-defun ()
-  "Move to last non-blank line after any blank lines."
+  "Move to the beginning of the current top-level definition.
+This considers both blank lines and indentation."
   (interactive)
   (unless (bobp)
     (backward-char)
     (goto-char (line-beginning-position))
+    ;; Skip any blank/comment lines we're currently in
     (while (and (not (bobp))
                 (czm-lean4--blank-or-comment-line-p))
       (forward-line -1))
+    ;; Go backward until we find a non-indented line preceded by a blank line
+    ;; or the beginning of buffer
     (while (and (not (bobp))
-                (save-excursion
-                  (forward-line -1)
-                  (not (czm-lean4--blank-or-comment-line-p))))
+                (or (not (czm-lean4--outer-level-line-p))
+                    (save-excursion
+                      (forward-line -1)
+                      (not (czm-lean4--blank-or-comment-line-p)))))
       (forward-line -1))))
 
 ;;;###autoload
 (defun czm-lean4-cheap-end-of-defun ()
-  "Move to first blank line after some non-blank lines."
+  "Move to the end of the current top-level definition.
+This moves to just after the last non-blank line of the current definition."
   (interactive)
+  ;; Skip any blank/comment lines we're currently in
   (while (and (not (eobp)) (czm-lean4--blank-or-comment-line-p))
     (forward-line 1))
-  (while (and (not (eobp)) (not (czm-lean4--blank-or-comment-line-p)))
+  ;; Find the next top-level definition or end of buffer
+  (let ((next-def-pos
+         (save-excursion
+           (while (and (not (eobp))
+                       (not (and (czm-lean4--blank-or-comment-line-p)
+                                 (save-excursion
+                                   (forward-line 1)
+                                   (and (not (eobp))
+                                        (not (czm-lean4--blank-or-comment-line-p))
+                                        (czm-lean4--outer-level-line-p))))))
+             (forward-line 1))
+           (point))))
+    ;; Now work backwards from next-def-pos to find the last non-blank line
+    (goto-char next-def-pos)
+    (while (and (not (bobp))
+                (czm-lean4--blank-or-comment-line-p))
+      (forward-line -1))
     (forward-line 1)))
 
 ;;;###autoload
