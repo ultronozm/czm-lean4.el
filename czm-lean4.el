@@ -688,6 +688,13 @@ This function is intended to be used with flymake overlays."
     (czm-lean4-create-goal-overlay)
     (czm-lean4-update-goal-overlay)))
 
+(defun czm-lean4--goal-overlay-update-adapter (&rest _)
+  "Adapter for updating goal overlay after info buffer redisplay.
+Suitable for use as advice to `lean4-info-buffer-redisplay'."
+  (when (and czm-lean4--goal-overlay
+             czm-lean4-live-goal-mode)
+    (czm-lean4-update-goal-overlay)))
+
 ;;;###autoload
 (define-minor-mode czm-lean4-live-goal-mode
   "Toggle live goal updates."

@@ -33,7 +33,8 @@ Download this repository, install using =M-x package-install-file= (or package-v
               ("C-c m h" . czm-lean4-search-mathlib-headings)
               ("C-c C-o" . czm-lean4-toggle-info-split-below))
   :config
-  (advice-add 'lean4-info-buffer-redisplay :around #'czm-lean4-info-buffer-redisplay))
+  (advice-add 'lean4-info-buffer-redisplay :around #'czm-lean4-info-buffer-redisplay)
+  (advice-add 'lean4-info-buffer-redisplay :after #'czm-lean4--goal-overlay-update-adapter))
 #+end_src
 
 Customize the binds as you like, and use the built-in documentation (=C-h f czm-lean4-whatever=) to see exactly what the commands do.
