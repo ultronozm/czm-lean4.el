@@ -638,7 +638,7 @@ This function is intended to be used with flymake overlays."
 
 (defun czm-lean4--apply-to-goal (cb)
   "Apply CB to the first goal."
-  (when-let ((server (eglot-current-server)))
+  (when-let* ((server (eglot-current-server)))
     (jsonrpc-async-request
      server :$/lean/plainGoal (eglot--TextDocumentPositionParams)
      :success-fn
@@ -686,6 +686,8 @@ This function is intended to be used with flymake overlays."
       (czm-lean4-remove-goal-overlay)
     (czm-lean4-create-goal-overlay)
     (czm-lean4-update-goal-overlay)))
+
+(defvar czm-lean4-live-goal-mode)
 
 (defun czm-lean4--goal-overlay-update-adapter (&rest _)
   "Adapter for updating goal overlay after info buffer redisplay.
