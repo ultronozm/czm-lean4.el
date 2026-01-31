@@ -181,7 +181,7 @@ With a PREFIX argument, use a separate buffer."
 (defun czm-lean4-outline-level ()
   "Find outline level of current line in a lean4 document."
   (let ((count 0))
-(save-restriction
+    (save-restriction
       (widen)
       (save-excursion
         (beginning-of-line)
@@ -194,7 +194,7 @@ With a PREFIX argument, use a separate buffer."
           (forward-line -1))))
     count))
 
-; the following couple defuns were taken from https://github.com/leanprover/lean4-mode/issues/22, due to felipeochoa
+;; the following couple defuns were taken from https://github.com/leanprover/lean4-mode/issues/22, due to felipeochoa
 
 (defvar czm-lean4-pause-info nil "If non-nil, pause info buffer updates.")
 
@@ -426,8 +426,8 @@ attempts to format the hypotheses in the manner described at URL
                              (or
                               (> (car (syntax-ppss)) 0)
                               (save-excursion
-                                     (beginning-of-line)
-                                     (search-forward "let" (line-end-position) t)))
+                                (beginning-of-line)
+                                (search-forward "let" (line-end-position) t)))
                            (search-forward ":=" end t))
                          (point)))
          (colon-equals-line-number (line-number-at-pos colon-equals)))
