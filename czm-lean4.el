@@ -542,7 +542,7 @@ Useful in when displaying Lean4 code in other buffers."
       (while (and (< (point) limit)
                   (not (eobp))
                   (not (looking-at-p " : ")))  ; Look for " : " instead of just ":"
-        (condition-case err
+        (condition-case nil
             (progn
               (forward-list)
               (when (eq (char-before) ?\))
