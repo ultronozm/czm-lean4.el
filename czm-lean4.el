@@ -475,7 +475,6 @@ buffer."
   (setq-local outline-regexp "\\(namespace\\|section\\|noncomputable section\\)\\>")
   (setq-local outline-level 'czm-lean4-outline-level)
   (setq-local tab-width 2)
-  (setq-local indent-line-function #'indent-relative)
   (czm-lean4-set-imenu-generic-expression)
   (czm-lean4-tex-setup))
 
